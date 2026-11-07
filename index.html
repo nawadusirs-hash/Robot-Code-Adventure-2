@@ -156,7 +156,7 @@
     .direction-button[data-dir="right"] { grid-column: 3; grid-row: 2; }
     .queue-heading { display: flex; justify-content: space-between; align-items: center; margin: 2px 0 7px; font-weight: 900; }
     .queue { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 7px; min-height: 58px; max-height: 120px; overflow: auto; padding: 9px; border: 2px dashed #ded9f7; border-radius: 13px; background: #fcfbff; }
-    .queue:empty::before { content: "ชี้ที่ลูกศรแล้วบีบนิ้วเพื่อเพิ่มคำสั่ง"; color: #9692ad; font-size: 13px; align-self: center; }
+    .queue:empty::before { content: "ชี้ที่ลูกศรค้างไว้เพื่อเพิ่มคำสั่ง"; color: #9692ad; font-size: 13px; align-self: center; }
     .command-chip { display: inline-flex; align-items: center; gap: 4px; padding: 5px 8px; border: 0; border-radius: 9px; background: #eeeaff; color: #5944b7; font-size: 19px; font-weight: 900; cursor: pointer; }
     .command-chip small { font-size: 10px; color: #8178ad; }
     .hand-hud {
@@ -177,11 +177,17 @@
     .hand-sensitivity input { width: 100%; accent-color: var(--purple); pointer-events: auto; }
     .virtual-cursor {
       position: fixed; z-index: 10001; display: none; width: 30px; height: 30px; border: 3px solid #fff;
-      border-radius: 50%; background: rgba(255, 106, 145, .3); box-shadow: 0 0 0 3px #ef4780, 0 2px 12px #29264b66;
+      border-radius: 50%; background: #ff4f86; box-shadow: 0 0 0 3px #fff, 0 0 0 6px #ef4780, 0 2px 12px #29264b66;
       pointer-events: none; transform: translate(-50%, -50%);
     }
     .virtual-cursor.visible { display: block; }
-    .virtual-cursor.pinching { transform: translate(-50%, -50%) scale(.72); background: rgba(255, 211, 90, .85); }
+    .virtual-cursor.dwell::before {
+      content: ""; position: absolute; inset: -11px; border-radius: 50%;
+      background: conic-gradient(#ffd35a var(--dwell-progress, 0%), rgba(255, 255, 255, .4) 0);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+      filter: drop-shadow(0 1px 2px #29264b88);
+    }
     .hand-hover:not(:disabled) {
       position: relative; z-index: 2; outline: 4px solid #ffbd38 !important; outline-offset: 3px;
       box-shadow: 0 0 0 7px rgba(255, 189, 56, .28), 0 7px 18px rgba(73, 52, 138, .24) !important;
@@ -190,12 +196,12 @@
     .hand-press { animation: handTap .26s ease !important; }
     @keyframes handTap { 50% { transform: scale(.92); filter: brightness(1.08); } }
     .hand-hover-option { outline: 3px solid #ffbd38 !important; outline-offset: 2px; }
-    .pinch-ripple {
+    .dwell-ripple {
       position: fixed; z-index: 10002; display: none; width: 18px; height: 18px; border: 3px solid #ffd35a; border-radius: 50%;
       pointer-events: none; transform: translate(-50%, -50%) scale(.3); opacity: 0;
     }
-    .pinch-ripple.fire { display: block; animation: pinchRipple .48s ease-out; }
-    @keyframes pinchRipple { 15% { opacity: 1; } 100% { transform: translate(-50%, -50%) scale(3.2); opacity: 0; } }
+    .dwell-ripple.fire { display: block; animation: dwellRipple .48s ease-out; }
+    @keyframes dwellRipple { 15% { opacity: 1; } 100% { transform: translate(-50%, -50%) scale(3.2); opacity: 0; } }
     .hand-debug { margin-top: 9px; border-top: 1px solid var(--line); padding-top: 7px; color: var(--muted); font: 10px/1.45 Consolas, monospace; overflow-wrap: anywhere; }
     .hand-debug[hidden] { display: none; }
     .hand-debug-toggle { display: inline-block; margin-top: 5px; color: var(--purple-dark); font-size: 11px; font-weight: 900; cursor: pointer; pointer-events: auto; }
@@ -278,13 +284,13 @@
         <div class="instructions panel">
           <div>
             <h2>🎮 วิธีเล่น</h2>
-            <p>1. เปิดควบคุมด้วยนิ้วชี้ด้านบน ชี้ปุ่มแล้วบีบนิ้วโป้งแตะนิ้วชี้</p>
+            <p>1. เปิดควบคุมด้วยนิ้วชี้ด้านบน แล้วชี้ค้างที่ปุ่ม 0.8 วินาทีเพื่อเลือก</p>
             <p>2. กด <strong>RUN</strong> ให้หุ่นยนต์ทำตามคำสั่ง</p>
             <p>3. หลีกเลี่ยงสิ่งกีดขวาง แล้วไปให้ถึงเป้าหมาย!</p>
           </div>
           <div>
             <h2>🧭 ควบคุมหุ่นยนต์</h2>
-            <p>โหมดหลัก: ชี้นิ้วไปยังปุ่มแล้วบีบนิ้วโป้งแตะนิ้วชี้เพื่อเลือก ใช้คีย์บอร์ด/แตะหน้าจอเป็นทางเลือก</p>
+            <p>โหมดหลัก: ใช้ปลายนิ้วชี้เล็งปุ่มและชี้ค้าง 0.8 วินาทีเพื่อเลือก ใช้คีย์บอร์ด/แตะหน้าจอเป็นทางเลือก</p>
             <div class="key-row" aria-label="ปุ่มลูกศรขึ้น ลง ซ้าย ขวา">
               <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><span>เดิน 1 ช่องต่อ 1 คำสั่ง</span>
             </div>
@@ -368,7 +374,7 @@
           </section>
           <section class="controls-panel panel" aria-label="แผงคำสั่ง">
             <h2>🧩 เรียงบัตรคำสั่ง</h2>
-            <p>ชี้ลูกศรแล้วบีบนิ้วเพื่อเรียงคำสั่ง ชี้บัตรคำสั่งแล้วบีบนิ้วเพื่อลบ จากนั้นชี้ RUN</p>
+            <p>ชี้ลูกศรค้างไว้เพื่อเรียงคำสั่ง ชี้บัตรคำสั่งค้างไว้เพื่อลบ จากนั้นชี้ RUN</p>
             <div class="direction-pad" aria-label="เลือกทิศทาง">
               <button class="direction-button" type="button" data-dir="up" aria-label="เดินขึ้น">↑</button>
               <button class="direction-button" type="button" data-dir="left" aria-label="เดินซ้าย">←</button>
@@ -420,9 +426,9 @@
   <aside class="hand-hud" id="handHud" aria-label="หน้าต่างกล้องควบคุมด้วยมือ" hidden>
     <div class="hand-preview">
       <video id="gameCameraVideo" playsinline muted aria-label="ภาพกล้องแบบกระจก"></video>
-      <canvas id="handLandmarkCanvas" aria-label="ตำแหน่งจุดตรวจจับบนมือ"></canvas>
+      <canvas id="handLandmarkCanvas" aria-label="จุดปลายนิ้วชี้ที่ตรวจจับได้"></canvas>
     </div>
-    <div class="hand-status" id="handControlStatus" data-state="idle" role="status" aria-live="polite">พร้อมเปิดกล้อง</div>
+    <div class="hand-status" id="handControlStatus" data-state="idle" role="status" aria-live="polite">พร้อมเปิดกล้อง · ชี้ค้าง 0.8 วินาทีเพื่อเลือก</div>
     <label class="hand-sensitivity" for="handSensitivity">
       <span>ความไวเคอร์เซอร์</span>
       <input id="handSensitivity" type="range" min="0.5" max="1.5" step="0.1" value="1" aria-label="ปรับความไวเคอร์เซอร์">
@@ -432,12 +438,12 @@
       <div id="handDebugPoint">เคอร์เซอร์: —</div>
       <div id="handDebugTarget">เป้าหมาย: —</div>
       <div id="handDebugHit">Hit test/CSS: —</div>
-      <div id="handDebugPinch">จีบนิ้ว: —</div>
+      <div id="handDebugDwell">ชี้ค้าง: —</div>
       <div id="handDebugEvent">คลิกล่าสุด: —</div>
     </div>
   </aside>
   <div class="virtual-cursor" id="virtualCursor" aria-hidden="true"></div>
-  <div class="pinch-ripple" id="pinchRipple" aria-hidden="true"></div>
+  <div class="dwell-ripple" id="dwellRipple" aria-hidden="true"></div>
 
   <script>
     (() => {
@@ -475,8 +481,8 @@
         remaining: 0, timer: null, resolutionTimer: null, running: false, resolving: false,
         muted: false, audio: null, gesture: null, hands: null, stream: null, cameraFrame: 0,
         cameraActive: false, handMode: null,
-        pointerPosition: null, hoveredElement: null, pinchLatched: false, lastPinchAt: 0,
-        clickFeedbackUntil: 0, lastHandScrollAt: 0, cursorSensitivity: 1,
+        pointerPosition: null, hoveredElement: null, dwellTarget: null, dwellStartedAt: 0,
+        activatedTarget: null, clickFeedbackUntil: 0, lastHandScrollAt: 0, cursorSensitivity: 1,
         handsScriptPromise: null, roundToken: 0, cameraAttemptToken: 0, lastGestureAt: 0
       };
 
@@ -825,19 +831,21 @@
         clearTimer();
         if (state.resolutionTimer) clearTimeout(state.resolutionTimer);
         state.resolutionTimer = null;
+        resetHandDwell();
+        state.activatedTarget = null;
         if (state.cameraActive && state.handMode === "controller") {
           state.pointerPosition = null;
         } else if (state.cameraActive && state.handMode === "challenge") {
           state.handMode = "controller";
           $("#handHud").hidden = false;
-          setHandStatus("ตรวจพบมือ · พร้อมควบคุมเกมด้วยการชี้และบีบนิ้ว", "detected");
+          setHandStatus("ตรวจพบนิ้วชี้ · พร้อมควบคุมเกมด้วยการชี้ค้าง", "detected");
         } else {
           state.cameraAttemptToken++;
           stopTrackingLoop();
           state.handMode = null;
           state.pointerPosition = null;
           clearHandHover();
-          $("#virtualCursor").classList.remove("visible", "pinching");
+          $("#virtualCursor").classList.remove("visible", "dwell");
           $("#handHud").hidden = true;
           $("#handControlButton").setAttribute("aria-pressed", "false");
           $("#handControlButton").textContent = "☝️ เปิดควบคุมด้วยนิ้วชี้";
@@ -974,7 +982,7 @@
           state.handMode = "controller";
           $("#handControlButton").textContent = "✋ ปิดควบคุมด้วยนิ้วชี้";
           $("#handControlButton").setAttribute("aria-pressed", "true");
-          setHandStatus("ตรวจพบมือ · พร้อมควบคุมเกมด้วยการชี้และบีบนิ้ว", "ready");
+          setHandStatus("ตรวจพบนิ้วชี้ · พร้อมควบคุมเกมด้วยการชี้ค้าง", "ready");
           setTimeout(startGame, 700);
         } else {
           status.textContent = `เห็นมือแล้ว! ลองทำท่า “${state.gesture.text}” อีกนิดนะ`;
@@ -984,20 +992,6 @@
       function distanceBetween(a, b) {
         return Math.hypot(a.x - b.x, a.y - b.y);
       }
-
-      function isIndexPointing(landmarks) {
-        const indexExtended = distanceBetween(landmarks[8], landmarks[5]) > distanceBetween(landmarks[6], landmarks[5]) * 1.2;
-        const otherFingersCurled = [[12, 10], [16, 14], [20, 18]].every(([tip, pip]) =>
-          distanceBetween(landmarks[tip], landmarks[0]) < distanceBetween(landmarks[pip], landmarks[0])
-        );
-        return indexExtended && otherFingersCurled;
-      }
-
-      const handConnections = [
-        [0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8],
-        [5, 9], [9, 10], [10, 11], [11, 12], [9, 13], [13, 14], [14, 15],
-        [15, 16], [13, 17], [17, 18], [18, 19], [19, 20], [0, 17]
-      ];
 
       function setHandStatus(message, phase = "idle") {
         const status = $("#handControlStatus");
@@ -1011,6 +1005,14 @@
         state.hoveredElement = null;
       }
 
+      function resetHandDwell() {
+        state.dwellTarget = null;
+        state.dwellStartedAt = 0;
+        const cursor = $("#virtualCursor");
+        cursor.classList.remove("dwell");
+        cursor.style.setProperty("--dwell-progress", "0%");
+      }
+
       function clearHandLandmarks() {
         const canvas = $("#handLandmarkCanvas");
         const context = canvas.getContext("2d");
@@ -1018,7 +1020,7 @@
         $("#handDebugPoint").textContent = "เคอร์เซอร์: —";
         $("#handDebugTarget").textContent = "กำลังชี้: ไม่พบปุ่ม";
         $("#handDebugHit").textContent = "Hit test/CSS: —";
-        $("#handDebugPinch").textContent = "จีบนิ้ว: ไม่พบมือ";
+        $("#handDebugDwell").textContent = "ชี้ค้าง: ไม่พบมือ";
       }
 
       function drawHandLandmarks(landmarks) {
@@ -1045,28 +1047,14 @@
           x: bounds.width - (offsetX + landmark.x * drawWidth),
           y: offsetY + landmark.y * drawHeight
         });
-        context.lineWidth = Math.max(2, bounds.width / 80);
-        context.lineCap = "round";
-        context.strokeStyle = "rgba(110, 255, 207, .92)";
-        for (const [from, to] of handConnections) {
-          const a = point(landmarks[from]);
-          const b = point(landmarks[to]);
-          context.beginPath();
-          context.moveTo(a.x, a.y);
-          context.lineTo(b.x, b.y);
-          context.stroke();
-        }
-        for (let index = 0; index < landmarks.length; index++) {
-          const position = point(landmarks[index]);
-          const radius = index === 8 || index === 4 ? 4.5 : 2.7;
-          context.beginPath();
-          context.arc(position.x, position.y, radius, 0, Math.PI * 2);
-          context.fillStyle = index === 8 ? "#ff4f86" : index === 4 ? "#ffd35a" : "#ffffff";
-          context.fill();
-          context.lineWidth = 1.5;
-          context.strokeStyle = "#342c6e";
-          context.stroke();
-        }
+        const indexTip = point(landmarks[8]);
+        context.beginPath();
+        context.arc(indexTip.x, indexTip.y, Math.max(5, bounds.width / 28), 0, Math.PI * 2);
+        context.fillStyle = "#ff4f86";
+        context.fill();
+        context.lineWidth = 2;
+        context.strokeStyle = "#fff";
+        context.stroke();
       }
 
       function findInteractiveTarget(x, y) {
@@ -1086,7 +1074,7 @@
         return (target.getAttribute("aria-label") || target.textContent.trim().replace(/\s+/g, " ")).slice(0, 40) || target.tagName.toLowerCase();
       }
 
-      function updateHandDebug(x, y, target, pinchRatio, phase) {
+      function updateHandDebug(x, y, target, dwellProgress, phase) {
         const point = state.pointerPosition ? `${Math.round(x)}, ${Math.round(y)} px` : "—";
         $("#handDebugPoint").textContent = `เคอร์เซอร์: ${point}`;
         const bounds = target?.getBoundingClientRect();
@@ -1095,7 +1083,7 @@
         const topStyle = top ? getComputedStyle(top) : null;
         const targetStyle = target ? getComputedStyle(target) : null;
         $("#handDebugHit").textContent = `Hit test/CSS: ${top ? `${top.tagName.toLowerCase()}${top.id ? `#${top.id}` : ""}` : "นอกหน้าจอ"} · ${targetStyle ? `pointer-events:${targetStyle.pointerEvents}, z:${targetStyle.zIndex}, transform:${targetStyle.transform === "none" ? "none" : "yes"}` : topStyle ? `pointer-events:${topStyle.pointerEvents}` : "—"}`;
-        $("#handDebugPinch").textContent = `จีบนิ้ว: ${phase} · ระยะ ${pinchRatio.toFixed(2)}×ฝ่ามือ`;
+        $("#handDebugDwell").textContent = `ชี้ค้าง: ${phase} · ${Math.round(dwellProgress * 100)}%`;
       }
 
       function updateHandHover(target) {
@@ -1108,29 +1096,29 @@
 
       function activateHandTarget(target) {
         if (!target || target.disabled) {
-          $("#handDebugEvent").textContent = `คลิกล่าสุด: ปุ่มใช้ไม่ได้ (${describeHandTarget(target)})`;
-          setHandStatus(`ตรวจพบมือ · ปุ่ม ${describeHandTarget(target)} ยังใช้งานไม่ได้`, "detected");
+          $("#handDebugEvent").textContent = `ไม่ได้เลือก: ปุ่มใช้ไม่ได้ (${describeHandTarget(target)})`;
+          setHandStatus(`ตรวจพบนิ้วชี้ · ปุ่ม ${describeHandTarget(target)} ยังใช้งานไม่ได้`, "detected");
           soundFor("wrong");
-          return;
+          return false;
         }
         if (!target.isConnected) {
-          $("#handDebugEvent").textContent = "คลิกล่าสุด: ยกเลิก · ปุ่มถูกเปลี่ยนระหว่างตรวจจับ";
-          setHandStatus("ตรวจพบมือ · ปุ่มถูกปรับปรุง กรุณาเล็งใหม่", "detected");
-          return;
+          $("#handDebugEvent").textContent = "ไม่ได้เลือก: ปุ่มถูกเปลี่ยนระหว่างตรวจจับ";
+          setHandStatus("ตรวจพบนิ้วชี้ · ปุ่มเปลี่ยนแล้ว กรุณาเล็งใหม่", "detected");
+          return false;
         }
         const actualTarget = findInteractiveTarget(state.pointerPosition.x, state.pointerPosition.y);
         if (actualTarget !== target) {
-          $("#handDebugEvent").textContent = `คลิกล่าสุด: ยกเลิก · ตำแหน่งเปลี่ยนเป็น ${describeHandTarget(actualTarget)}`;
-          setHandStatus("ตรวจพบมือ · เล็งที่ปุ่มใหม่แล้วจีบนิ้วอีกครั้ง", "detected");
-          return;
+          $("#handDebugEvent").textContent = `ไม่ได้เลือก: ตำแหน่งเปลี่ยนเป็น ${describeHandTarget(actualTarget)}`;
+          setHandStatus("ตรวจพบนิ้วชี้ · เล็งที่ปุ่มใหม่แล้วชี้ค้าง", "detected");
+          return false;
         }
         const buttonName = describeHandTarget(target);
-        $("#handDebugEvent").textContent = `คลิกล่าสุด: ${buttonName} · ${Math.round(state.pointerPosition.x)}, ${Math.round(state.pointerPosition.y)}`;
+        $("#handDebugEvent").textContent = `เลือกสำเร็จ: ${buttonName} · ${Math.round(state.pointerPosition.x)}, ${Math.round(state.pointerPosition.y)}`;
         target.classList.remove("hand-press");
         void target.offsetWidth;
         target.classList.add("hand-press");
         setTimeout(() => target.classList.remove("hand-press"), 300);
-        const ripple = $("#pinchRipple");
+        const ripple = $("#dwellRipple");
         ripple.style.left = `${state.pointerPosition.x}px`;
         ripple.style.top = `${state.pointerPosition.y}px`;
         ripple.classList.remove("fire");
@@ -1160,15 +1148,16 @@
         } else {
           target.click();
         }
+        setHandStatus(`เลือกสำเร็จ · ${buttonName}`, "clicked");
         state.clickFeedbackUntil = Date.now() + 850;
-        setHandStatus(`คลิกสำเร็จ · ${buttonName}`, "clicked");
+        return true;
       }
 
       function handleHandController(landmarks) {
         if (!landmarks) {
-          state.pinchLatched = true;
           state.pointerPosition = null;
-          $("#virtualCursor").classList.remove("visible", "pinching");
+          resetHandDwell();
+          $("#virtualCursor").classList.remove("visible", "dwell");
           clearHandHover();
           clearHandLandmarks();
           setHandStatus("ไม่พบมือ · กรุณายกมือให้อยู่ในกรอบกล้อง", "missing");
@@ -1191,44 +1180,42 @@
         cursor.style.top = `${y}px`;
         cursor.classList.add("visible");
         const now = Date.now();
-        const palmWidth = Math.max(.001, distanceBetween(landmarks[5], landmarks[17]));
-        const pinchRatio = distanceBetween(landmarks[4], landmarks[8]) / palmWidth;
-        const pinching = state.pinchLatched ? pinchRatio < .62 : pinchRatio < .44;
-        if (!pinching && now - state.lastHandScrollAt > 90) {
+        let scrollingAtEdge = false;
+        if (now - state.lastHandScrollAt > 90) {
           if (y >= window.innerHeight - 24 && window.scrollY + window.innerHeight < document.documentElement.scrollHeight) {
             window.scrollBy(0, 10);
             state.lastHandScrollAt = now;
+            scrollingAtEdge = true;
           } else if (y <= 24 && window.scrollY > 0) {
             window.scrollBy(0, -10);
             state.lastHandScrollAt = now;
+            scrollingAtEdge = true;
           }
         }
-        const target = findInteractiveTarget(x, y);
+        const target = scrollingAtEdge ? null : findInteractiveTarget(x, y);
         updateHandHover(target);
-        updateHandDebug(x, y, target, pinchRatio, pinching ? "จีบนิ้วแล้ว" : "นิ้วแยก");
-        cursor.classList.toggle("pinching", pinching);
-        if (pinching && !state.pinchLatched) {
-          state.pinchLatched = true;
-          if (now - state.lastPinchAt >= 450) {
-            state.lastPinchAt = now;
-            if (target) {
-              setHandStatus(`จีบนิ้วแล้ว · ${describeHandTarget(target)}`, "pinching");
-              activateHandTarget(target);
-            }
-            else {
-              soundFor("wrong");
-              $("#handDebugEvent").textContent = `คลิกล่าสุด: ไม่มีปุ่มที่ ${Math.round(x)}, ${Math.round(y)}`;
-              setHandStatus("ตรวจพบมือ · เลื่อนเคอร์เซอร์ไปวางบนปุ่มก่อนบีบนิ้ว", "detected");
-            }
-          } else {
-            setHandStatus("พร้อมควบคุม · รอสักครู่ก่อนเลือกปุ่มถัดไป", "ready");
+        if (state.activatedTarget && state.activatedTarget !== target) state.activatedTarget = null;
+        if (target !== state.dwellTarget) {
+          state.dwellTarget = target;
+          state.dwellStartedAt = target ? now : 0;
+        }
+        const elapsed = target ? now - state.dwellStartedAt : 0;
+        const progress = target ? Math.min(1, elapsed / 800) : 0;
+        updateHandDebug(x, y, target, progress, state.activatedTarget === target ? "ย้ายนิ้วออกเพื่อเลือกซ้ำ" : target ? "กำลังเลือก" : "รอชี้ปุ่ม");
+        cursor.classList.toggle("dwell", Boolean(target) && state.activatedTarget !== target);
+        cursor.style.setProperty("--dwell-progress", `${progress * 100}%`);
+        if (state.activatedTarget === target && target) {
+          setHandStatus(`เลือกสำเร็จ · ${describeHandTarget(target)}`, "clicked");
+        } else if (target) {
+          setHandStatus(`กำลังเลือก · ${describeHandTarget(target)}`, "ready");
+          if (progress >= 1) {
+            state.activatedTarget = target;
+            activateHandTarget(target);
           }
-        } else if (!pinching) {
-          state.pinchLatched = false;
-          const pointing = isIndexPointing(landmarks);
-          if (Date.now() < state.clickFeedbackUntil) return;
-          if (target) setHandStatus(`กำลังชี้ · ${describeHandTarget(target)}`, "ready");
-          else setHandStatus(pointing ? "ตรวจพบมือ · ชี้นิ้วไปยังปุ่มที่ต้องการ" : "ตรวจพบมือ · ยกนิ้วชี้เพื่อเล็ง และบีบนิ้วเพื่อเลือก", "detected");
+        } else if (now < state.clickFeedbackUntil) {
+          setHandStatus("เลือกสำเร็จ", "clicked");
+        } else {
+          setHandStatus("ตรวจพบนิ้วชี้ · เล็งนิ้วไปยังปุ่มที่ต้องการ", "detected");
         }
       }
 
@@ -1249,8 +1236,9 @@
         if (state.cameraFrame) cancelAnimationFrame(state.cameraFrame);
         state.cameraFrame = 0;
         state.cameraActive = false;
-        state.pinchLatched = false;
-        $("#virtualCursor").classList.remove("visible", "pinching");
+        resetHandDwell();
+        state.activatedTarget = null;
+        $("#virtualCursor").classList.remove("visible", "dwell");
         clearHandHover();
       }
 
@@ -1331,7 +1319,8 @@
         }
         state.handMode = mode;
         state.pointerPosition = null;
-        state.pinchLatched = false;
+        resetHandDwell();
+        state.activatedTarget = null;
         state.cameraActive = true;
         $("#handControlButton").textContent = "✋ ปิดควบคุมด้วยนิ้วชี้";
         $("#handControlButton").setAttribute("aria-pressed", "true");
