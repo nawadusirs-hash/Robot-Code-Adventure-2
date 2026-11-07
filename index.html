@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#6e55df">
+  <title>ROBOT CODE ADVENTURE: ภารกิจหุ่นยนต์พิชิตอัลกอริทึม</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #29264b;
+      --muted: #716e8d;
+      --purple: #765be8;
+      --purple-dark: #5b42c9;
+      --pink: #ff7fae;
+      --yellow: #ffd35a;
+      --mint: #72dfbf;
+      --paper: #fffdf8;
+      --line: #e8e4fb;
+      --shadow: 0 16px 40px rgba(66, 53, 128, .15);
+      font-family: "Leelawadee UI", "Noto Sans Thai", Tahoma, sans-serif;
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 8%, rgba(255, 211, 90, .28) 0 5px, transparent 6px),
+        radial-gradient(circle at 92% 20%, rgba(114, 223, 191, .28) 0 7px, transparent 8px),
+        linear-gradient(145deg, #f8f6ff, #fff8f1 55%, #f0fffa);
+      background-size: 80px 80px, 110px 110px, auto;
+    }
+
+    button, select, input { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, select:focus-visible, input:focus-visible {
+      outline: 3px solid #ffab4c;
+      outline-offset: 3px;
+    }
+
+    .app-shell { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 18px 0 30px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; letter-spacing: .03em; }
+    .brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; background: var(--yellow); box-shadow: 0 5px 0 #eab744; font-size: 24px; }
+    .brand small { display: block; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 0; }
+    .sound-toggle, .secondary-button, .icon-button, .hand-toggle {
+      border: 2px solid var(--line); background: white; border-radius: 14px; cursor: pointer; font-weight: 800;
+      transition: transform .15s, box-shadow .15s, background .15s;
+    }
+    .sound-toggle, .hand-toggle { padding: 9px 13px; box-shadow: 0 4px 0 var(--line); }
+    .sound-toggle:hover, .secondary-button:hover, .icon-button:hover, .hand-toggle:hover { transform: translateY(-2px); }
+    .hand-toggle[aria-pressed="true"] { border-color: #9ce8cf; background: #e9fff7; color: #26765d; }
+    .screen { display: none; }
+    .screen.active { display: block; animation: appear .35s ease both; }
+    @keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .panel { background: rgba(255, 253, 248, .96); border: 2px solid white; border-radius: 28px; box-shadow: var(--shadow); }
+
+    .hero {
+      position: relative; overflow: hidden; display: grid; grid-template-columns: 1.15fr .85fr; align-items: center;
+      min-height: 420px; padding: clamp(24px, 6vw, 64px); background: linear-gradient(135deg, #fff 5%, #f1edff 100%);
+    }
+    .hero::after { content: ""; position: absolute; width: 260px; height: 260px; border-radius: 50%; right: 3%; top: -90px; background: #dff9f1; }
+    .hero-copy, .hero-art { position: relative; z-index: 1; }
+    .eyebrow { display: inline-flex; gap: 7px; align-items: center; padding: 7px 12px; border-radius: 99px; background: #fff1bd; color: #80600d; font-size: 13px; font-weight: 900; }
+    h1 { margin: 16px 0 8px; font-size: clamp(32px, 5vw, 56px); line-height: 1.1; color: var(--purple-dark); }
+    .hero-subtitle { margin: 0 0 14px; font-size: clamp(18px, 2.4vw, 24px); font-weight: 900; }
+    .hero-description { max-width: 550px; color: var(--muted); line-height: 1.8; }
+    .hero-art { display: grid; place-items: center; min-height: 250px; }
+    .robot-mascot { position: relative; font-size: clamp(130px, 23vw, 220px); line-height: 1; filter: drop-shadow(0 16px 8px rgba(80, 68, 139, .18)); animation: bob 2.5s ease-in-out infinite; }
+    @keyframes bob { 50% { transform: translateY(-11px) rotate(2deg); } }
+    .sparkle { position: absolute; color: #ffbd38; font-size: 34px; animation: twinkle 1.4s ease-in-out infinite alternate; }
+    .sparkle.one { top: 10%; right: 15%; } .sparkle.two { bottom: 14%; left: 12%; animation-delay: .6s; }
+    @keyframes twinkle { to { transform: scale(.7) rotate(25deg); opacity: .6; } }
+    .main-button {
+      border: 0; border-radius: 16px; padding: 13px 22px; background: var(--purple); color: white; font-weight: 900; font-size: 18px;
+      cursor: pointer; box-shadow: 0 6px 0 var(--purple-dark); transition: transform .15s, box-shadow .15s;
+    }
+    .main-button:hover { transform: translateY(-2px); box-shadow: 0 8px 0 var(--purple-dark); }
+    .main-button:active { transform: translateY(3px); box-shadow: 0 3px 0 var(--purple-dark); }
+    .instructions { margin-top: 18px; padding: 20px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .instructions h2 { margin: 0 0 10px; font-size: 19px; }
+    .instructions p { margin: 5px 0; color: var(--muted); line-height: 1.7; }
+    .key-row { display: flex; align-items: center; gap: 7px; margin-top: 7px; flex-wrap: wrap; }
+    kbd { display: inline-grid; place-items: center; min-width: 35px; min-height: 33px; border: 2px solid #ded9f7; border-radius: 9px; background: white; box-shadow: 0 3px 0 #ded9f7; font-weight: 900; }
+    .credit { margin: 16px 0 0; text-align: center; color: var(--muted); font-size: 13px; font-weight: 700; }
+
+    .setup-panel { width: min(760px, 100%); margin: 30px auto; padding: clamp(22px, 5vw, 40px); }
+    .setup-panel h2, .summary-panel h2 { margin: 0 0 8px; font-size: clamp(25px, 4vw, 34px); color: var(--purple-dark); }
+    .setup-intro { margin: 0 0 22px; color: var(--muted); line-height: 1.7; }
+    .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .field-label { display: block; margin-bottom: 8px; font-weight: 900; }
+    .select-field { width: 100%; padding: 11px 12px; border: 2px solid var(--line); border-radius: 13px; background: white; color: var(--ink); }
+    .toggle-card { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 10px 12px; border: 2px solid var(--line); border-radius: 13px; background: white; font-weight: 800; }
+    .toggle-card input { width: 20px; height: 20px; accent-color: var(--purple); }
+    .time-control { margin-top: 19px; padding: 15px; border-radius: 16px; background: #f6f3ff; }
+    .time-control[hidden] { display: none; }
+    .time-line { display: flex; justify-content: space-between; gap: 10px; align-items: center; font-weight: 800; }
+    .time-line input { width: 64%; accent-color: var(--purple); }
+    .setup-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+    .secondary-button { padding: 11px 15px; box-shadow: 0 4px 0 var(--line); }
+    .setup-note { margin: 18px 0 0; padding: 12px 14px; border-radius: 13px; background: #eafbf6; color: #316a58; line-height: 1.6; font-size: 14px; }
+
+    .booth-panel { width: min(850px, 100%); margin: 24px auto; padding: clamp(20px, 4vw, 32px); }
+    .booth-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, .75fr); gap: 22px; align-items: center; }
+    .camera-frame { position: relative; min-height: 265px; overflow: hidden; border: 4px solid white; border-radius: 22px; background: linear-gradient(135deg, #e8e3ff, #dff9f1); box-shadow: 0 0 0 2px var(--line); }
+    .camera-frame video { display: none; width: 100%; height: 100%; min-height: 265px; object-fit: cover; transform: scaleX(-1); }
+    .camera-frame video.visible { display: block; }
+    .camera-placeholder { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; text-align: center; color: var(--muted); }
+    .camera-placeholder span { display: block; font-size: 64px; }
+    .camera-status { min-height: 46px; margin: 12px 0; color: var(--muted); line-height: 1.55; }
+    .gesture-card { margin: 14px 0; padding: 18px; border-radius: 17px; background: #fff5cf; }
+    .gesture-card strong { display: block; color: #75530b; font-size: 20px; }
+    .gesture-emoji { font-size: 42px; }
+    .booth-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+    .booth-actions .main-button { font-size: 16px; }
+    .booth-hint { color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+    .game-header { display: flex; justify-content: space-between; gap: 14px; align-items: center; margin: 4px 0 14px; flex-wrap: wrap; }
+    .game-title { margin: 0; font-size: 22px; }
+    .round-pill { padding: 8px 13px; border-radius: 99px; background: white; border: 2px solid var(--line); font-weight: 900; }
+    .game-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr); gap: 16px; align-items: stretch; }
+    .board-panel, .controls-panel { padding: clamp(15px, 3vw, 24px); }
+    .board-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 13px; }
+    .board-top h2 { margin: 0; font-size: 20px; }
+    .timer-box { min-width: 130px; text-align: right; font-weight: 900; }
+    .timer-text { color: var(--purple-dark); }
+    .timer-track { height: 11px; margin-top: 5px; overflow: hidden; border-radius: 99px; background: #eeeafb; }
+    .timer-bar { height: 100%; width: 100%; border-radius: inherit; background: linear-gradient(90deg, #71dcb8, #ffd35a); transition: width .15s linear, background .3s; }
+    .timer-bar.low { background: linear-gradient(90deg, #ffb050, #ff6d86); }
+    .board { display: grid; gap: 7px; width: min(100%, 470px); aspect-ratio: 1; margin: 0 auto; padding: 10px; border-radius: 20px; background: #e8e3ff; }
+    .cell { display: grid; place-items: center; min-width: 0; border: 2px solid rgba(115, 93, 220, .12); border-radius: 13px; background: #fffefa; font-size: clamp(17px, 4vw, 31px); user-select: none; }
+    .cell.start { background: #d8faed; }
+    .cell.goal { background: #fff0b8; }
+    .cell.obstacle { background: #e2def3; }
+    .cell.robot-cell { position: relative; z-index: 1; border-color: var(--purple); background: #fff; box-shadow: 0 0 0 3px rgba(118, 91, 232, .18); animation: hop .32s ease; }
+    @keyframes hop { 50% { transform: translateY(-5px) scale(1.05); } }
+    .legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 12px; color: var(--muted); font-size: 13px; }
+    .legend span { display: inline-flex; gap: 5px; align-items: center; }
+    .mini-stats { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+    .stat-chip { padding: 8px 11px; border-radius: 12px; background: #f7f4ff; font-weight: 900; }
+    .controls-panel { display: flex; flex-direction: column; }
+    .controls-panel h2 { margin: 0 0 5px; font-size: 20px; }
+    .controls-panel > p { margin: 0 0 15px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .direction-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: min(100%, 260px); margin: 0 auto 15px; }
+    .direction-button { min-height: 54px; border: 2px solid #e6e1fa; border-radius: 14px; background: white; box-shadow: 0 4px 0 #e6e1fa; cursor: pointer; font-size: 24px; font-weight: 900; touch-action: manipulation; }
+    .direction-button:hover { background: #f5f2ff; transform: translateY(-1px); }
+    .direction-button:active { transform: translateY(3px); box-shadow: 0 1px 0 #e6e1fa; }
+    .direction-button[data-dir="up"] { grid-column: 2; }
+    .direction-button[data-dir="left"] { grid-column: 1; grid-row: 2; }
+    .direction-button[data-dir="down"] { grid-column: 2; grid-row: 2; }
+    .direction-button[data-dir="right"] { grid-column: 3; grid-row: 2; }
+    .queue-heading { display: flex; justify-content: space-between; align-items: center; margin: 2px 0 7px; font-weight: 900; }
+    .queue { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 7px; min-height: 58px; max-height: 120px; overflow: auto; padding: 9px; border: 2px dashed #ded9f7; border-radius: 13px; background: #fcfbff; }
+    .queue:empty::before { content: "ชี้ที่ลูกศรแล้วบีบนิ้วเพื่อเพิ่มคำสั่ง"; color: #9692ad; font-size: 13px; align-self: center; }
+    .command-chip { display: inline-flex; align-items: center; gap: 4px; padding: 5px 8px; border: 0; border-radius: 9px; background: #eeeaff; color: #5944b7; font-size: 19px; font-weight: 900; cursor: pointer; }
+    .command-chip small { font-size: 10px; color: #8178ad; }
+    .hand-hud {
+      position: fixed; z-index: 10000; top: 76px; right: 16px; width: min(240px, calc(100vw - 24px));
+      padding: 9px; border: 2px solid white; border-radius: 17px; background: rgba(255, 253, 248, .96);
+      box-shadow: 0 10px 32px rgba(48, 39, 101, .2); pointer-events: none;
+    }
+    .hand-hud[hidden] { display: none; }
+    .hand-preview { position: relative; overflow: hidden; aspect-ratio: 4 / 3; border-radius: 11px; background: #25213c; }
+    .hand-preview video, .hand-preview canvas {
+      position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit;
+    }
+    .hand-preview video { transform: scaleX(-1); }
+    .hand-preview canvas { z-index: 1; pointer-events: none; }
+    .hand-status { margin: 7px 2px; color: #5545a4; font-size: 13px; font-weight: 900; line-height: 1.45; }
+    .hand-status[data-state="missing"], .hand-status[data-state="error"] { color: #b94848; }
+    .hand-sensitivity { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; font-weight: 800; }
+    .hand-sensitivity input { width: 100%; accent-color: var(--purple); pointer-events: auto; }
+    .virtual-cursor {
+      position: fixed; z-index: 10001; display: none; width: 30px; height: 30px; border: 3px solid #fff;
+      border-radius: 50%; background: rgba(255, 106, 145, .3); box-shadow: 0 0 0 3px #ef4780, 0 2px 12px #29264b66;
+      pointer-events: none; transform: translate(-50%, -50%);
+    }
+    .virtual-cursor.visible { display: block; }
+    .virtual-cursor.pinching { transform: translate(-50%, -50%) scale(.72); background: rgba(255, 211, 90, .85); }
+    .hand-hover:not(:disabled) {
+      position: relative; z-index: 2; outline: 4px solid #ffbd38 !important; outline-offset: 3px;
+      box-shadow: 0 0 0 7px rgba(255, 189, 56, .28), 0 7px 18px rgba(73, 52, 138, .24) !important;
+      filter: saturate(1.2);
+    }
+    .hand-press { animation: handTap .26s ease !important; }
+    @keyframes handTap { 50% { transform: scale(.92); filter: brightness(1.08); } }
+    .hand-hover-option { outline: 3px solid #ffbd38 !important; outline-offset: 2px; }
+    .control-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
+    .control-actions button { flex: 1; min-width: 90px; font-size: 15px; }
+    .control-actions .run-button { background: #ff8eaf; box-shadow: 0 5px 0 #dc6387; }
+    .control-actions .run-button:hover { box-shadow: 0 7px 0 #dc6387; }
+    .feedback { min-height: 44px; margin-top: 13px; padding: 10px 12px; border-radius: 12px; background: #f3f0ff; color: #5545a4; font-weight: 800; line-height: 1.5; }
+    .feedback.error { background: #fff0ef; color: #b94848; }
+    .feedback.success { background: #e7fbf2; color: #27765d; }
+    .solution-strip { display: none; margin-top: 9px; padding: 10px; border-radius: 12px; background: #fff4cf; font-weight: 900; line-height: 1.7; }
+    .solution-strip.visible { display: block; }
+
+    .summary-panel { margin: 24px auto; padding: clamp(22px, 5vw, 40px); text-align: center; }
+    .summary-trophy { font-size: 78px; }
+    .summary-score { margin: 14px 0; font-size: clamp(30px, 6vw, 46px); font-weight: 1000; color: var(--purple-dark); }
+    .summary-details { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 18px 0; }
+    .summary-details .stat-chip { padding: 11px 15px; font-size: 17px; }
+    .photo-section { max-width: 620px; margin: 22px auto 0; padding: 18px; border: 2px solid var(--line); border-radius: 18px; background: white; }
+    .photo-section h3 { margin: 0 0 5px; }
+    .photo-section p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+    #photoCanvas { display: none; max-width: 100%; margin: 12px auto; border-radius: 14px; }
+    .footer-note { margin-top: 20px; color: var(--muted); font-size: 13px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+    @media (max-width: 760px) {
+      .hand-hud { top: 66px; right: 9px; width: min(185px, calc(100vw - 18px)); }
+      .hand-status { font-size: 11px; }
+      .hero { grid-template-columns: 1fr; text-align: center; }
+      .hero-art { min-height: 190px; }
+      .robot-mascot { font-size: 155px; }
+      .instructions { grid-template-columns: 1fr; }
+      .game-layout { grid-template-columns: 1fr; }
+      .board { width: min(100%, 440px); }
+      .booth-grid { grid-template-columns: 1fr; }
+      .camera-frame, .camera-frame video { min-height: 220px; }
+    }
+    @media (max-width: 480px) {
+      .app-shell { width: min(100% - 20px, 1120px); padding-top: 10px; }
+      .brand { font-size: 13px; }
+      .brand-mark { width: 37px; height: 37px; }
+      .sound-toggle, .hand-toggle { padding: 8px 9px; font-size: 12px; }
+      .topbar { flex-wrap: wrap; }
+      .hero { padding: 27px 19px; }
+      .setup-grid { grid-template-columns: 1fr; }
+      .board { gap: 5px; padding: 7px; }
+      .cell { border-radius: 9px; }
+      .direction-button { min-height: 48px; }
+      .timer-box { min-width: 108px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">🤖</span><span>ROBOT CODE ADVENTURE<small>เรียนรู้ด้วยการลงมือทำ</small></span></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="hand-toggle" id="handControlButton" type="button" aria-pressed="false">☝️ เปิดควบคุมด้วยนิ้วชี้</button>
+        <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true">🔊 เปิดเสียง</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="screen active" id="homeScreen" aria-labelledby="gameTitle">
+        <div class="hero panel">
+          <div class="hero-copy">
+            <span class="eyebrow">🚀 เกมวิทยาการคำนวณ ป.4</span>
+            <h1 id="gameTitle">ROBOT CODE<br>ADVENTURE</h1>
+            <p class="hero-subtitle">ภารกิจหุ่นยนต์พิชิตอัลกอริทึม</p>
+            <p class="hero-description">ช่วยเจ้าหุ่นยนต์วางแผนเดินทางให้ถึงเป้าหมาย ด้วยการเรียงลำดับรหัสจำลองทีละขั้น! ฝึกคิดอย่างเป็นระบบ สนุกกับภารกิจ และสะสมดาวไปด้วยกัน</p>
+            <button class="main-button" id="goSetup" type="button">เริ่มออกผจญภัย ✨</button>
+          </div>
+          <div class="hero-art" aria-label="หุ่นยนต์การ์ตูนน่ารัก">
+            <span class="sparkle one">✦</span><span class="robot-mascot" aria-hidden="true">🤖</span><span class="sparkle two">✦</span>
+          </div>
+        </div>
+        <div class="instructions panel">
+          <div>
+            <h2>🎮 วิธีเล่น</h2>
+            <p>1. เปิดควบคุมด้วยนิ้วชี้ด้านบน ชี้ปุ่มแล้วบีบนิ้วโป้งแตะนิ้วชี้</p>
+            <p>2. กด <strong>RUN</strong> ให้หุ่นยนต์ทำตามคำสั่ง</p>
+            <p>3. หลีกเลี่ยงสิ่งกีดขวาง แล้วไปให้ถึงเป้าหมาย!</p>
+          </div>
+          <div>
+            <h2>🧭 ควบคุมหุ่นยนต์</h2>
+            <p>โหมดหลัก: ชี้นิ้วไปยังปุ่มแล้วบีบนิ้วโป้งแตะนิ้วชี้เพื่อเลือก ใช้คีย์บอร์ด/แตะหน้าจอเป็นทางเลือก</p>
+            <div class="key-row" aria-label="ปุ่มลูกศรขึ้น ลง ซ้าย ขวา">
+              <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><span>เดิน 1 ช่องต่อ 1 คำสั่ง</span>
+            </div>
+          </div>
+        </div>
+        <p class="credit">จัดทำโดย “แก๊งล่าใบประกอบ มรภ.ราชนครินทร์”</p>
+      </section>
+
+      <section class="screen" id="setupScreen" aria-labelledby="setupTitle">
+        <div class="setup-panel panel">
+          <h2 id="setupTitle">เตรียมตัวก่อนเริ่มภารกิจ 🗺️</h2>
+          <p class="setup-intro">เลือกความท้าทายให้เหมาะกับตัวเอง แล้วเตรียมช่วยหุ่นยนต์ออกเดินทาง 10 ภารกิจ!</p>
+          <div class="setup-grid">
+            <label><span class="field-label">ระดับความยาก</span>
+              <select id="difficultySelect" class="select-field">
+                <option value="easy">ง่าย · ตาราง 4×4 · 20 วินาที</option>
+                <option value="medium">ปานกลาง · ตาราง 5×5 · 15 วินาที</option>
+                <option value="hard">ยาก · ตาราง 6×6 · 10 วินาที</option>
+              </select>
+            </label>
+            <label class="toggle-card"><input id="practiceToggle" type="checkbox"> โหมดฝึก ไม่จับเวลา</label>
+          </div>
+          <div class="time-control" id="timeControl">
+            <div class="time-line"><label for="timeSlider">ปรับเวลาต่อภารกิจ</label><span><b id="timeValue">20</b> วินาที</span></div>
+            <input id="timeSlider" type="range" min="5" max="60" step="1" value="20">
+          </div>
+          <div class="setup-actions">
+            <button class="main-button" id="toBooth" type="button">ไปที่ Photo Booth 📸</button>
+            <button class="secondary-button" id="backHome" type="button">กลับหน้าแรก</button>
+          </div>
+          <p class="setup-note">คลังภารกิจสร้างเส้นทางที่เดินถึงได้จริง 100 รูปแบบต่อขนาดตาราง สุ่มเล่น 10 แผนที่โดยไม่ซ้ำกัน</p>
+        </div>
+      </section>
+
+      <section class="screen" id="boothScreen" aria-labelledby="boothTitle">
+        <div class="booth-panel panel">
+          <h2 id="boothTitle">Photo Booth: ท่าพร้อมลุย! 📸</h2>
+          <p class="setup-intro">สุ่มภารกิจท่าทาง 1 ท่าจาก 10 ท่า ทำตามคำสั่งให้เจ้าหุ่นยนต์เห็น หรือข้ามไปเล่นได้เลย</p>
+          <div class="booth-grid">
+            <div>
+              <div class="camera-frame">
+                <video id="cameraVideo" playsinline muted aria-label="ภาพจากกล้องเว็บแคม"></video>
+                <div class="camera-placeholder" id="cameraPlaceholder"><div><span>📷</span>กด “เปิดกล้องและเริ่ม” เพื่อทำภารกิจท่าทาง</div></div>
+              </div>
+              <p class="camera-status" id="cameraStatus" role="status">กล้องเป็นตัวเลือกเสริม เกมเล่นด้วยเมาส์และคีย์บอร์ดได้เสมอ</p>
+            </div>
+            <div>
+              <div class="gesture-card"><span class="gesture-emoji" id="gestureEmoji">✋</span><strong>ภารกิจท่าทางของคุณ</strong><span id="gesturePrompt">ยกมือให้เห็นฝ่ามือ</span></div>
+              <div class="booth-actions">
+                <button class="main-button" id="enableCamera" type="button">เปิดกล้องและเริ่ม</button>
+                <button class="secondary-button" id="skipGesture" type="button">ข้ามขั้นตอน</button>
+                <button class="secondary-button" id="noCamera" type="button">เล่นโดยไม่ใช้กล้อง</button>
+              </div>
+              <p class="booth-hint">ระบบตรวจจับมือทำงานบนอุปกรณ์ของคุณผ่าน MediaPipe Hands หากกล้องหรือระบบ AI ยังไม่พร้อม สามารถข้ามไปเล่นได้ตามปกติ</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="gameScreen" aria-labelledby="missionTitle">
+        <div class="game-header">
+          <h1 class="game-title" id="missionTitle">ภารกิจที่ 1: ตามหาแบตเตอรี่</h1>
+          <span class="round-pill" id="roundPill">ภารกิจ 1 / 10</span>
+        </div>
+        <div class="game-layout">
+          <section class="board-panel panel" aria-label="แผนที่ภารกิจ">
+            <div class="board-top">
+              <h2>🗺️ แผนที่ของเรา</h2>
+              <div class="timer-box">
+                <span class="timer-text" id="timerText">⏱ 20 วินาที</span>
+                <div class="timer-track" id="timerTrack"><div class="timer-bar" id="timerBar"></div></div>
+              </div>
+            </div>
+            <div class="board" id="board" role="grid" aria-label="ตารางเส้นทาง"></div>
+            <div class="legend"><span>🤖 หุ่นยนต์</span><span>🔋 จุดหมาย</span><span>🪨 สิ่งกีดขวาง</span><span>🟩 จุดเริ่ม</span></div>
+            <div class="mini-stats">
+              <span class="stat-chip" id="scoreChip">⭐ คะแนน 0</span>
+              <span class="stat-chip" id="streakChip">🔥 คอมโบ 0</span>
+              <span class="stat-chip" id="starsChip">🌟 ดาว 0</span>
+            </div>
+          </section>
+          <section class="controls-panel panel" aria-label="แผงคำสั่ง">
+            <h2>🧩 เรียงบัตรคำสั่ง</h2>
+            <p>ชี้ลูกศรแล้วบีบนิ้วเพื่อเรียงคำสั่ง ชี้บัตรคำสั่งแล้วบีบนิ้วเพื่อลบ จากนั้นชี้ RUN</p>
+            <div class="direction-pad" aria-label="เลือกทิศทาง">
+              <button class="direction-button" type="button" data-dir="up" aria-label="เดินขึ้น">↑</button>
+              <button class="direction-button" type="button" data-dir="left" aria-label="เดินซ้าย">←</button>
+              <button class="direction-button" type="button" data-dir="down" aria-label="เดินลง">↓</button>
+              <button class="direction-button" type="button" data-dir="right" aria-label="เดินขวา">→</button>
+            </div>
+            <div class="queue-heading"><span>คำสั่งของฉัน</span><span id="commandCount">0 ขั้น</span></div>
+            <div class="queue" id="commandQueue" aria-live="polite"></div>
+            <div class="control-actions">
+              <button class="secondary-button" id="undoCommand" type="button">↩ ย้อนกลับ</button>
+              <button class="secondary-button" id="clearCommands" type="button">ล้าง</button>
+              <button class="main-button run-button" id="runCommands" type="button">RUN ▶</button>
+            </div>
+            <div class="feedback" id="feedback" role="status" aria-live="polite">วางคำสั่งให้หุ่นยนต์ไปถึง 🔋 นะ!</div>
+            <div class="solution-strip" id="solutionStrip" aria-live="polite"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="screen" id="summaryScreen" aria-labelledby="summaryTitle">
+        <div class="summary-panel panel">
+          <div class="summary-trophy" aria-hidden="true">🏆</div>
+          <h2 id="summaryTitle">ยอดเยี่ยม นักผจญภัย!</h2>
+          <p id="summaryMessage">คุณทำภารกิจครบแล้ว</p>
+          <div class="summary-score" id="finalScore">0 คะแนน</div>
+          <div class="summary-details">
+            <span class="stat-chip" id="finalStars">🌟 0 ดาว</span>
+            <span class="stat-chip" id="finalCleared">✅ ผ่าน 0 / 10</span>
+            <span class="stat-chip" id="finalBestStreak">🔥 คอมโบสูงสุด 0</span>
+          </div>
+          <div class="photo-section">
+            <h3>📸 ภาพที่ระลึกคู่กับหุ่นยนต์</h3>
+            <p>ถ่ายภาพผ่านกล้องเว็บแคม แล้วบันทึกลงในอุปกรณ์ของคุณ (ต้องอนุญาตให้ใช้กล้อง)</p>
+            <button class="secondary-button" id="capturePhoto" type="button">ถ่ายภาพที่ระลึก</button>
+            <button class="secondary-button" id="downloadPhoto" type="button" hidden>ดาวน์โหลดภาพ</button>
+            <canvas id="photoCanvas" width="900" height="600" aria-label="ภาพที่ระลึกนักผจญภัยกับหุ่นยนต์"></canvas>
+            <p class="camera-status" id="photoStatus" role="status"></p>
+          </div>
+          <div class="setup-actions" style="justify-content:center">
+            <button class="main-button" id="playAgain" type="button">เล่นอีกครั้ง 🔁</button>
+            <button class="secondary-button" id="summaryHome" type="button">กลับหน้าแรก</button>
+          </div>
+          <p class="footer-note">จัดทำโดย “แก๊งล่าใบประกอบ มรภ.ราชนครินทร์” · เรียนรู้การเขียนขั้นตอนวิธีด้วยรหัสจำลอง</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <aside class="hand-hud" id="handHud" aria-label="หน้าต่างกล้องควบคุมด้วยมือ" hidden>
+    <div class="hand-preview">
+      <video id="gameCameraVideo" playsinline muted aria-label="ภาพกล้องแบบกระจก"></video>
+      <canvas id="handLandmarkCanvas" aria-label="ตำแหน่งจุดตรวจจับบนมือ"></canvas>
+    </div>
+    <div class="hand-status" id="handControlStatus" data-state="idle" role="status" aria-live="polite">พร้อมเปิดกล้อง</div>
+    <label class="hand-sensitivity" for="handSensitivity">
+      <span>ความไวเคอร์เซอร์</span>
+      <input id="handSensitivity" type="range" min="0.5" max="1.5" step="0.1" value="1" aria-label="ปรับความไวเคอร์เซอร์">
+    </label>
+  </aside>
+  <div class="virtual-cursor" id="virtualCursor" aria-hidden="true"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const $ = (selector) => document.querySelector(selector);
+      const screens = ["homeScreen", "setupScreen", "boothScreen", "gameScreen", "summaryScreen"];
+      const directions = {
+        up: { dx: 0, dy: -1, arrow: "↑", name: "ขึ้น", key: "ArrowUp" },
+        down: { dx: 0, dy: 1, arrow: "↓", name: "ลง", key: "ArrowDown" },
+        left: { dx: -1, dy: 0, arrow: "←", name: "ซ้าย", key: "ArrowLeft" },
+        right: { dx: 1, dy: 0, arrow: "→", name: "ขวา", key: "ArrowRight" }
+      };
+      const levels = {
+        easy: { size: 4, seconds: 20, label: "ง่าย" },
+        medium: { size: 5, seconds: 15, label: "ปานกลาง" },
+        hard: { size: 6, seconds: 10, label: "ยาก" }
+      };
+      const mediaPipeCdn = "https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240";
+      const gestures = [
+        { id: "palm", emoji: "✋", text: "ยกมือให้เห็นฝ่ามือ" },
+        { id: "index", emoji: "☝️", text: "ชูนิ้วชี้ขึ้น 1 นิ้ว" },
+        { id: "peace", emoji: "✌️", text: "ชูสองนิ้วเป็นรูปตัววี" },
+        { id: "three", emoji: "🤟", text: "ชูนิ้วขึ้น 3 นิ้ว" },
+        { id: "four", emoji: "🖖", text: "ชูนิ้วขึ้น 4 นิ้ว" },
+        { id: "fist", emoji: "✊", text: "กำมือเป็นกำปั้น" },
+        { id: "thumb", emoji: "👍", text: "ยกนิ้วโป้งขึ้น" },
+        { id: "pinky", emoji: "🤘", text: "ชูนิ้วก้อยขึ้น 1 นิ้ว" },
+        { id: "pointLeft", emoji: "👈", text: "ชี้นิ้วไปทางซ้าย" },
+        { id: "pointRight", emoji: "👉", text: "ชี้นิ้วไปทางขวา" }
+      ];
+      const state = {
+        difficulty: "easy", practice: false, seconds: 20, maps: [], round: 0, commands: [],
+        position: 0, score: 0, stars: 0, streak: 0, bestStreak: 0, cleared: 0,
+        remaining: 0, timer: null, resolutionTimer: null, running: false, resolving: false,
+        muted: false, audio: null, gesture: null, hands: null, stream: null, cameraFrame: 0,
+        cameraActive: false, handMode: null,
+        pointerPosition: null, hoveredElement: null, pinchLatched: false, lastPinchAt: 0,
+        cursorSensitivity: 1,
+        handsScriptPromise: null, roundToken: 0, cameraAttemptToken: 0, lastGestureAt: 0
+      };
+
+      function showScreen(id) {
+        for (const screen of screens) $("#" + screen).classList.toggle("active", screen === id);
+      }
+
+      function playTone(frequency, duration = .12, type = "sine", volume = .045) {
+        if (state.muted) return;
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          if (!state.audio) state.audio = new AudioContext();
+          if (state.audio.state === "suspended") state.audio.resume();
+          const oscillator = state.audio.createOscillator();
+          const gain = state.audio.createGain();
+          oscillator.type = type;
+          oscillator.frequency.setValueAtTime(frequency, state.audio.currentTime);
+          gain.gain.setValueAtTime(volume, state.audio.currentTime);
+          gain.gain.exponentialRampToValueAtTime(.001, state.audio.currentTime + duration);
+          oscillator.connect(gain);
+          gain.connect(state.audio.destination);
+          oscillator.start();
+          oscillator.stop(state.audio.currentTime + duration);
+        } catch (error) {
+          console.warn("เปิดเสียงไม่สำเร็จ:", error);
+        }
+      }
+
+      function soundFor(kind) {
+        if (kind === "select") playTone(570, .08, "triangle", .035);
+        if (kind === "move") playTone(400, .09, "sine", .04);
+        if (kind === "correct") { playTone(660, .14, "triangle"); setTimeout(() => playTone(880, .18, "triangle"), 110); }
+        if (kind === "wrong") { playTone(190, .22, "sawtooth", .035); }
+        if (kind === "timeout") { playTone(260, .32, "triangle", .04); }
+      }
+
+      function seededRandom(seed) {
+        let value = seed >>> 0;
+        return () => {
+          value = (value * 1664525 + 1013904223) >>> 0;
+          return value / 4294967296;
+        };
+      }
+
+      function findRoute(size, start, goal, obstacles) {
+        const queue = [start];
+        const previous = new Map([[start, null]]);
+        const previousDirection = new Map();
+        const neighborDirs = ["up", "down", "left", "right"];
+        for (let cursor = 0; cursor < queue.length; cursor++) {
+          const cell = queue[cursor];
+          if (cell === goal) break;
+          const x = cell % size;
+          const y = Math.floor(cell / size);
+          for (const dir of neighborDirs) {
+            const nextX = x + directions[dir].dx;
+            const nextY = y + directions[dir].dy;
+            if (nextX < 0 || nextY < 0 || nextX >= size || nextY >= size) continue;
+            const next = nextY * size + nextX;
+            if (obstacles.has(next) || previous.has(next)) continue;
+            previous.set(next, cell);
+            previousDirection.set(next, dir);
+            queue.push(next);
+          }
+        }
+        if (!previous.has(goal)) return null;
+        const route = [];
+        for (let cell = goal; cell !== start; cell = previous.get(cell)) route.push(previousDirection.get(cell));
+        return route.reverse();
+      }
+
+      function createMapPool(size, count = 100) {
+        const random = seededRandom(2026 + size * 7919);
+        const maps = [];
+        const signatures = new Set();
+        let attempts = 0;
+        while (maps.length < count && attempts < count * 500) {
+          attempts++;
+          const start = Math.floor(random() * size * size);
+          let goal = Math.floor(random() * size * size);
+          if (goal === start) goal = (goal + 1 + Math.floor(random() * (size * size - 1))) % (size * size);
+          const obstacleCount = 1 + Math.floor(random() * Math.max(2, Math.floor(size * size * .23)));
+          const obstacles = new Set();
+          while (obstacles.size < obstacleCount) {
+            const cell = Math.floor(random() * size * size);
+            if (cell !== start && cell !== goal) obstacles.add(cell);
+          }
+          const route = findRoute(size, start, goal, obstacles);
+          if (!route || route.length > size * size - 1) continue;
+          const signature = `${start}:${goal}:${Array.from(obstacles).sort((a, b) => a - b).join(",")}`;
+          if (signatures.has(signature)) continue;
+          signatures.add(signature);
+          maps.push({ size, start, goal, obstacles, solution: route });
+        }
+        if (maps.length !== count) throw new Error(`สร้างคลังแผนที่ขนาด ${size}×${size} ได้ไม่ครบ ${count} รูปแบบ`);
+        return maps;
+      }
+
+      const mapPools = {
+        4: createMapPool(4),
+        5: createMapPool(5),
+        6: createMapPool(6)
+      };
+
+      function shuffle(items) {
+        const copy = items.slice();
+        for (let index = copy.length - 1; index > 0; index--) {
+          const swap = Math.floor(Math.random() * (index + 1));
+          [copy[index], copy[swap]] = [copy[swap], copy[index]];
+        }
+        return copy;
+      }
+
+      function setFeedback(message, type = "") {
+        const feedback = $("#feedback");
+        feedback.textContent = message;
+        feedback.className = `feedback${type ? " " + type : ""}`;
+      }
+
+      function updateStats() {
+        $("#scoreChip").textContent = `⭐ คะแนน ${state.score}`;
+        $("#streakChip").textContent = `🔥 คอมโบ ${state.streak}`;
+        $("#starsChip").textContent = `🌟 ดาว ${state.stars}`;
+      }
+
+      function renderBoard() {
+        const map = state.maps[state.round];
+        const board = $("#board");
+        board.style.gridTemplateColumns = `repeat(${map.size}, 1fr)`;
+        board.replaceChildren();
+        for (let cell = 0; cell < map.size * map.size; cell++) {
+          const element = document.createElement("div");
+          element.className = "cell";
+          element.setAttribute("role", "gridcell");
+          let icon = "";
+          if (map.obstacles.has(cell)) {
+            element.classList.add("obstacle");
+            icon = "🪨";
+          }
+          if (cell === map.start) {
+            element.classList.add("start");
+            icon = "🟩";
+          }
+          if (cell === map.goal) {
+            element.classList.add("goal");
+            icon = "🔋";
+          }
+          if (cell === state.position) {
+            element.classList.add("robot-cell");
+            icon = "🤖";
+          }
+          element.textContent = icon;
+          element.setAttribute("aria-label", cell === map.start ? "จุดเริ่มต้น" : cell === map.goal ? "จุดหมาย" : map.obstacles.has(cell) ? "สิ่งกีดขวาง" : cell === state.position ? "หุ่นยนต์" : "ช่องว่าง");
+          board.append(element);
+        }
+      }
+
+      function renderCommands() {
+        const queue = $("#commandQueue");
+        queue.replaceChildren();
+        state.commands.forEach((dir, index) => {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "command-chip";
+          chip.setAttribute("aria-label", `ลบคำสั่งที่ ${index + 1} เดิน${directions[dir].name}`);
+          const arrow = document.createElement("span");
+          arrow.textContent = directions[dir].arrow;
+          const number = document.createElement("small");
+          number.textContent = String(index + 1);
+          chip.append(arrow, number);
+          chip.disabled = state.running || state.resolving;
+          chip.addEventListener("click", () => {
+            state.commands.splice(index, 1);
+            renderCommands();
+            soundFor("select");
+          });
+          queue.append(chip);
+        });
+        $("#commandCount").textContent = `${state.commands.length} ขั้น`;
+        $("#undoCommand").disabled = state.commands.length === 0 || state.running || state.resolving;
+        $("#clearCommands").disabled = state.commands.length === 0 || state.running || state.resolving;
+        $("#runCommands").disabled = state.running || state.resolving || state.commands.length === 0;
+        document.querySelectorAll(".direction-button").forEach(button => {
+          button.disabled = state.running || state.resolving;
+        });
+      }
+
+      function addCommand(dir) {
+        if (state.running || state.resolving || !$("#gameScreen").classList.contains("active")) return;
+        state.commands.push(dir);
+        renderCommands();
+        soundFor("select");
+      }
+
+      function clearTimer() {
+        if (state.timer) clearInterval(state.timer);
+        state.timer = null;
+      }
+
+      function beginRound() {
+        clearTimer();
+        state.roundToken++;
+        state.resolving = false;
+        state.running = false;
+        state.commands = [];
+        state.position = state.maps[state.round].start;
+        state.remaining = state.seconds;
+        $("#roundPill").textContent = `ภารกิจ ${state.round + 1} / 10`;
+        $("#missionTitle").textContent = `ภารกิจที่ ${state.round + 1}: ตามหาแบตเตอรี่`;
+        $("#timerTrack").hidden = state.practice;
+        $("#timerText").textContent = state.practice ? "🧪 โหมดฝึก" : `⏱ ${state.seconds} วินาที`;
+        $("#timerBar").style.width = "100%";
+        $("#timerBar").classList.remove("low");
+        $("#solutionStrip").classList.remove("visible");
+        setFeedback(state.practice ? "โหมดฝึก: ลองวางคำสั่งได้เรื่อย ๆ ไม่จำกัดเวลา" : "วางคำสั่งให้หุ่นยนต์ไปถึง 🔋 นะ!");
+        renderBoard();
+        renderCommands();
+        updateStats();
+        if (!state.practice) {
+          state.timer = setInterval(() => {
+            state.remaining = Math.max(0, state.remaining - .1);
+            $("#timerText").textContent = `⏱ ${Math.ceil(state.remaining)} วินาที`;
+            $("#timerBar").style.width = `${Math.max(0, state.remaining / state.seconds * 100)}%`;
+            $("#timerBar").classList.toggle("low", state.remaining <= Math.min(5, state.seconds * .3));
+            if (state.remaining <= 0) finishRound(false, true);
+          }, 100);
+        }
+      }
+
+      function revealSolution() {
+        const map = state.maps[state.round];
+        const arrows = map.solution.map(dir => directions[dir].arrow).join(" ");
+        const text = document.createElement("span");
+        text.textContent = `เฉลยเส้นทาง: ${arrows || "เริ่มต้นตรงจุดหมาย!"}`;
+        const hint = document.createElement("span");
+        hint.textContent = " · กำลังไปภารกิจถัดไปใน 5 วินาที";
+        $("#solutionStrip").replaceChildren(text, hint);
+        $("#solutionStrip").classList.add("visible");
+      }
+
+      function finishRound(success, timedOut = false) {
+        if (state.resolving) return;
+        state.resolving = true;
+        state.running = false;
+        clearTimer();
+        renderCommands();
+        if (success) {
+          state.cleared++;
+          state.streak++;
+          state.bestStreak = Math.max(state.bestStreak, state.streak);
+          const combo = state.streak >= 2 ? 2 : 1;
+          const earned = 100 * combo + Math.max(0, Math.ceil(state.remaining / 2));
+          const stars = state.remaining > state.seconds * .55 || state.practice ? 3 : state.remaining > state.seconds * .2 ? 2 : 1;
+          state.score += earned;
+          state.stars += stars;
+          soundFor("correct");
+          setFeedback(`เก่งมาก! ผ่านภารกิจ ได้ ${earned} คะแนน${combo === 2 ? " (คอมโบ ×2!)" : ""} และ ${stars} ดาว`, "success");
+        } else {
+          state.streak = 0;
+          if (timedOut) {
+            soundFor("timeout");
+            setFeedback("หมดเวลาแล้ว! มาดูเส้นทางที่ถูกต้องกันนะ", "error");
+          }
+        }
+        updateStats();
+        revealSolution();
+        const token = state.roundToken;
+        state.resolutionTimer = setTimeout(() => {
+          if (token !== state.roundToken) return;
+          state.round++;
+          if (state.round >= state.maps.length) showSummary();
+          else beginRound();
+        }, 5000);
+      }
+
+      async function runCommands() {
+        if (state.running || state.resolving || state.commands.length === 0) return;
+        state.running = true;
+        state.position = state.maps[state.round].start;
+        renderBoard();
+        renderCommands();
+        setFeedback("หุ่นยนต์กำลังเดินตามคำสั่ง... 🤖");
+        const token = state.roundToken;
+        for (const dir of state.commands) {
+          if (state.resolving || token !== state.roundToken) return;
+          await new Promise(resolve => setTimeout(resolve, 430));
+          if (state.resolving || token !== state.roundToken) return;
+          const map = state.maps[state.round];
+          const x = state.position % map.size;
+          const y = Math.floor(state.position / map.size);
+          const nextX = x + directions[dir].dx;
+          const nextY = y + directions[dir].dy;
+          if (nextX < 0 || nextY < 0 || nextX >= map.size || nextY >= map.size) {
+            state.running = false;
+            renderBoard();
+            renderCommands();
+            soundFor("wrong");
+            setFeedback("อุ๊ย! หุ่นยนต์เดินออกนอกแผนที่ ลองแก้คำสั่งแล้ว RUN อีกครั้งนะ", "error");
+            return;
+          }
+          const next = nextY * map.size + nextX;
+          if (map.obstacles.has(next)) {
+            state.running = false;
+            renderBoard();
+            renderCommands();
+            soundFor("wrong");
+            setFeedback("เจอสิ่งกีดขวาง! ลองเปลี่ยนลำดับคำสั่งเพื่อหาทางใหม่", "error");
+            return;
+          }
+          state.position = next;
+          renderBoard();
+          soundFor("move");
+          if (state.position === map.goal && dir !== state.commands[state.commands.length - 1]) {
+            state.running = false;
+            renderCommands();
+            soundFor("wrong");
+            setFeedback("ถึงเป้าหมายแล้ว แต่ยังมีคำสั่งต่อท้าย ลองลบขั้นตอนที่เกินออกนะ", "error");
+            return;
+          }
+        }
+        if (state.resolving || token !== state.roundToken) return;
+        state.running = false;
+        renderCommands();
+        if (state.position === state.maps[state.round].goal) finishRound(true);
+        else {
+          soundFor("wrong");
+          setFeedback("ยังไปไม่ถึงจุดหมาย ลองเพิ่มหรือแก้ไขคำสั่งแล้ว RUN ใหม่ได้เลย", "error");
+        }
+      }
+
+      function startGame() {
+        clearTimer();
+        if (state.resolutionTimer) clearTimeout(state.resolutionTimer);
+        state.resolutionTimer = null;
+        if (state.cameraActive && state.handMode === "controller") {
+          state.pointerPosition = null;
+        } else if (state.cameraActive && state.handMode === "challenge") {
+          state.handMode = "controller";
+          $("#handHud").hidden = false;
+          setHandStatus("ตรวจพบมือ · พร้อมควบคุมเกมด้วยการชี้และบีบนิ้ว", "detected");
+        } else {
+          state.cameraAttemptToken++;
+          stopTrackingLoop();
+          state.handMode = null;
+          state.pointerPosition = null;
+          clearHandHover();
+          $("#virtualCursor").classList.remove("visible", "pinching");
+          $("#handHud").hidden = true;
+          $("#handControlButton").setAttribute("aria-pressed", "false");
+          $("#handControlButton").textContent = "☝️ เปิดควบคุมด้วยนิ้วชี้";
+        }
+        const level = levels[state.difficulty];
+        state.maps = shuffle(mapPools[level.size]).slice(0, 10);
+        state.round = 0;
+        state.score = 0;
+        state.stars = 0;
+        state.streak = 0;
+        state.bestStreak = 0;
+        state.cleared = 0;
+        showScreen("gameScreen");
+        beginRound();
+      }
+
+      function showSummary() {
+        clearTimer();
+        if (state.handMode !== "controller") state.cameraAttemptToken++;
+        state.resolving = false;
+        state.running = false;
+        $("#finalScore").textContent = `${state.score} คะแนน`;
+        $("#finalStars").textContent = `🌟 ${state.stars} ดาว`;
+        $("#finalCleared").textContent = `✅ ผ่าน ${state.cleared} / 10`;
+        $("#finalBestStreak").textContent = `🔥 คอมโบสูงสุด ${state.bestStreak}`;
+        $("#summaryMessage").textContent = state.cleared === 10
+          ? "สุดยอด! คุณช่วยหุ่นยนต์พิชิตทุกภารกิจได้สำเร็จ"
+          : `คุณช่วยหุ่นยนต์ผ่าน ${state.cleared} ภารกิจ เก่งมากที่ได้ฝึกคิดเป็นขั้นตอน!`;
+        $("#photoCanvas").style.display = "none";
+        $("#downloadPhoto").hidden = true;
+        $("#photoStatus").textContent = "";
+        showScreen("summaryScreen");
+      }
+
+      function goToBooth() {
+        const level = levels[state.difficulty];
+        state.practice = $("#practiceToggle").checked;
+        state.seconds = state.practice ? level.seconds : Number($("#timeSlider").value);
+        state.gesture = gestures[Math.floor(Math.random() * gestures.length)];
+        $("#gestureEmoji").textContent = state.gesture.emoji;
+        $("#gesturePrompt").textContent = state.gesture.text;
+        $("#cameraStatus").textContent = "เปิดกล้องเพื่อตรวจท่าทางก่อนเริ่ม หรือข้ามไปใช้เคอร์เซอร์มือ/ปุ่มบนหน้าจอ";
+        $("#cameraPlaceholder").style.display = "grid";
+        $("#cameraVideo").classList.remove("visible");
+        showScreen("boothScreen");
+      }
+
+      function loadHandsScript() {
+        if (state.handsScriptPromise) return state.handsScriptPromise;
+        state.handsScriptPromise = new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = `${mediaPipeCdn}/hands.js`;
+          script.crossOrigin = "anonymous";
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error("โหลด MediaPipe Hands จาก CDN ไม่สำเร็จ"));
+          document.head.append(script);
+        }).catch(error => {
+          state.handsScriptPromise = null;
+          throw error;
+        });
+        return state.handsScriptPromise;
+      }
+
+      async function openCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error("เบราว์เซอร์นี้ไม่รองรับเว็บแคม หรือหน้านี้ไม่ได้เปิดผ่าน HTTPS/localhost");
+        }
+        if (!state.stream || !state.stream.getVideoTracks().some(track => track.readyState === "live")) {
+          state.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+        }
+        const videos = [$("#cameraVideo"), $("#gameCameraVideo")];
+        for (const video of videos) {
+          if (video.srcObject !== state.stream) video.srcObject = state.stream;
+          await video.play();
+        }
+        $("#cameraVideo").classList.add("visible");
+        $("#gameCameraVideo").classList.add("visible");
+        $("#cameraPlaceholder").style.display = "none";
+        $("#handHud").hidden = false;
+        setHandStatus("เปิดกล้องแล้ว · กำลังเตรียม AI ตรวจจับมือ", "camera");
+        state.cameraActive = true;
+      }
+
+      function countExtendedFingers(landmarks) {
+        const tips = [8, 12, 16, 20];
+        const pips = [6, 10, 14, 18];
+        return tips.map((tip, index) => landmarks[tip].y < landmarks[pips[index]].y);
+      }
+
+      function recognizedGesture(landmarks) {
+        const extended = countExtendedFingers(landmarks);
+        const count = extended.filter(Boolean).length;
+        const thumbUp = landmarks[4].y < landmarks[3].y && landmarks[4].y < landmarks[2].y;
+        const thumbExtended = distanceBetween(landmarks[4], landmarks[2]) > distanceBetween(landmarks[3], landmarks[2]) * 1.15;
+        const indexOnly = extended[0] && !extended[1] && !extended[2] && !extended[3];
+        if (count === 0 && thumbUp) return "thumb";
+        if (count === 0) return "fist";
+        if (count === 4 && thumbExtended) return "palm";
+        if (count === 1 && extended[3]) return "pinky";
+        if (count === 1 && indexOnly) {
+          const horizontal = landmarks[8].x - landmarks[5].x;
+          if (Math.abs(horizontal) > .12) return horizontal < 0 ? "pointLeft" : "pointRight";
+          return "index";
+        }
+        if (count === 2 && extended[0] && extended[1]) return "peace";
+        if (count === 3 && extended[0] && extended[1] && extended[2]) return "three";
+        if (count === 4) return "four";
+        return null;
+      }
+
+      function onHandResults(results) {
+        if (!state.cameraActive) return;
+        const landmarks = results.multiHandLandmarks && results.multiHandLandmarks[0];
+        if (state.handMode === "controller") {
+          handleHandController(landmarks);
+          return;
+        }
+        if (state.handMode !== "challenge" || !state.gesture) return;
+        const status = $("#cameraStatus");
+        if (!landmarks) {
+          status.textContent = `ยังไม่เห็นมือในภาพ ลองทำท่า: ${state.gesture.text}`;
+          clearHandLandmarks();
+          setHandStatus("ไม่พบมือ · กรุณายกมือให้อยู่ในกรอบกล้อง", "missing");
+          return;
+        }
+        drawHandLandmarks(landmarks);
+        setHandStatus("ตรวจพบมือ · กำลังตรวจท่าทาง", "detected");
+        const detected = recognizedGesture(landmarks);
+        if (detected === state.gesture.id) {
+          const now = Date.now();
+          if (now - state.lastGestureAt < 1200) return;
+          state.lastGestureAt = now;
+          status.textContent = "เยี่ยมเลย! ตรวจพบท่าทางแล้ว กำลังเปิดภารกิจ... ✨";
+          state.handMode = "controller";
+          $("#handControlButton").textContent = "✋ ปิดควบคุมด้วยนิ้วชี้";
+          $("#handControlButton").setAttribute("aria-pressed", "true");
+          setHandStatus("ตรวจพบมือ · พร้อมควบคุมเกมด้วยการชี้และบีบนิ้ว", "ready");
+          setTimeout(startGame, 700);
+        } else {
+          status.textContent = `เห็นมือแล้ว! ลองทำท่า “${state.gesture.text}” อีกนิดนะ`;
+        }
+      }
+
+      function distanceBetween(a, b) {
+        return Math.hypot(a.x - b.x, a.y - b.y);
+      }
+
+      function isIndexPointing(landmarks) {
+        const indexExtended = distanceBetween(landmarks[8], landmarks[5]) > distanceBetween(landmarks[6], landmarks[5]) * 1.2;
+        const otherFingersCurled = [[12, 10], [16, 14], [20, 18]].every(([tip, pip]) =>
+          distanceBetween(landmarks[tip], landmarks[0]) < distanceBetween(landmarks[pip], landmarks[0])
+        );
+        return indexExtended && otherFingersCurled;
+      }
+
+      const handConnections = [
+        [0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8],
+        [5, 9], [9, 10], [10, 11], [11, 12], [9, 13], [13, 14], [14, 15],
+        [15, 16], [13, 17], [17, 18], [18, 19], [19, 20], [0, 17]
+      ];
+
+      function setHandStatus(message, phase = "idle") {
+        const status = $("#handControlStatus");
+        if (status.textContent === message && status.dataset.state === phase) return;
+        status.textContent = message;
+        status.dataset.state = phase;
+      }
+
+      function clearHandHover() {
+        if (state.hoveredElement) state.hoveredElement.classList.remove("hand-hover", "hand-hover-option");
+        state.hoveredElement = null;
+      }
+
+      function clearHandLandmarks() {
+        const canvas = $("#handLandmarkCanvas");
+        const context = canvas.getContext("2d");
+        context.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      function drawHandLandmarks(landmarks) {
+        const canvas = $("#handLandmarkCanvas");
+        const video = $("#gameCameraVideo");
+        const bounds = canvas.getBoundingClientRect();
+        if (!bounds.width || !bounds.height || !video.videoWidth || !video.videoHeight) return;
+        const ratio = window.devicePixelRatio || 1;
+        const width = Math.round(bounds.width * ratio);
+        const height = Math.round(bounds.height * ratio);
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+        }
+        const context = canvas.getContext("2d");
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        context.clearRect(0, 0, bounds.width, bounds.height);
+        const scale = Math.max(bounds.width / video.videoWidth, bounds.height / video.videoHeight);
+        const drawWidth = video.videoWidth * scale;
+        const drawHeight = video.videoHeight * scale;
+        const offsetX = (bounds.width - drawWidth) / 2;
+        const offsetY = (bounds.height - drawHeight) / 2;
+        const point = landmark => ({
+          x: bounds.width - (offsetX + landmark.x * drawWidth),
+          y: offsetY + landmark.y * drawHeight
+        });
+        context.lineWidth = Math.max(2, bounds.width / 80);
+        context.lineCap = "round";
+        context.strokeStyle = "rgba(110, 255, 207, .92)";
+        for (const [from, to] of handConnections) {
+          const a = point(landmarks[from]);
+          const b = point(landmarks[to]);
+          context.beginPath();
+          context.moveTo(a.x, a.y);
+          context.lineTo(b.x, b.y);
+          context.stroke();
+        }
+        for (let index = 0; index < landmarks.length; index++) {
+          const position = point(landmarks[index]);
+          const radius = index === 8 || index === 4 ? 4.5 : 2.7;
+          context.beginPath();
+          context.arc(position.x, position.y, radius, 0, Math.PI * 2);
+          context.fillStyle = index === 8 ? "#ff4f86" : index === 4 ? "#ffd35a" : "#ffffff";
+          context.fill();
+          context.lineWidth = 1.5;
+          context.strokeStyle = "#342c6e";
+          context.stroke();
+        }
+      }
+
+      function findInteractiveTarget(x, y) {
+        const element = document.elementFromPoint(x, y);
+        if (!(element instanceof Element)) return null;
+        const target = element.closest("button, select, input, a[href], [role='button'], [data-hand-click]");
+        if (!target || target.hidden || target.getAttribute("aria-hidden") === "true") return null;
+        return target;
+      }
+
+      function updateHandHover(target) {
+        if (target === state.hoveredElement) return;
+        clearHandHover();
+        if (!target) return;
+        state.hoveredElement = target;
+        target.classList.add("hand-hover");
+      }
+
+      function activateHandTarget(target) {
+        if (!target || target.disabled) {
+          setHandStatus("พร้อมควบคุม · ปุ่มนี้ยังใช้งานไม่ได้", "ready");
+          soundFor("wrong");
+          return;
+        }
+        target.classList.remove("hand-press");
+        void target.offsetWidth;
+        target.classList.add("hand-press");
+        setTimeout(() => target.classList.remove("hand-press"), 300);
+        soundFor("select");
+        if (target instanceof HTMLSelectElement) {
+          target.selectedIndex = (target.selectedIndex + 1) % target.options.length;
+          target.dispatchEvent(new Event("input", { bubbles: true }));
+          target.dispatchEvent(new Event("change", { bubbles: true }));
+        } else if (target instanceof HTMLInputElement && target.type === "range") {
+          const min = Number(target.min) || 0;
+          const max = Number(target.max) || 100;
+          const bounds = target.getBoundingClientRect();
+          const ratio = Math.max(0, Math.min(1, (state.pointerPosition.x - bounds.left) / bounds.width));
+          const step = Number(target.step) || 1;
+          const value = min + ratio * (max - min);
+          target.value = String(Math.round(value / step) * step);
+          target.dispatchEvent(new Event("input", { bubbles: true }));
+          target.dispatchEvent(new Event("change", { bubbles: true }));
+        } else {
+          target.click();
+        }
+        const label = target.getAttribute("aria-label") || target.textContent.trim().replace(/\s+/g, " ");
+        setHandStatus(target instanceof HTMLSelectElement
+          ? `พร้อมควบคุม · เลือก ${target.options[target.selectedIndex].text}`
+          : `พร้อมควบคุม · เลือก ${label.slice(0, 42) || "ปุ่ม"}`, "ready");
+      }
+
+      function handleHandController(landmarks) {
+        if (!landmarks) {
+          state.pinchLatched = true;
+          state.pointerPosition = null;
+          $("#virtualCursor").classList.remove("visible", "pinching");
+          clearHandHover();
+          clearHandLandmarks();
+          setHandStatus("ไม่พบมือ · กรุณายกมือให้อยู่ในกรอบกล้อง", "missing");
+          return;
+        }
+        drawHandLandmarks(landmarks);
+        const tip = landmarks[8];
+        const sensitivity = state.cursorSensitivity;
+        const targetX = Math.max(0, Math.min(window.innerWidth, window.innerWidth * (.5 + (.5 - tip.x) * sensitivity)));
+        const targetY = Math.max(0, Math.min(window.innerHeight, window.innerHeight * (.5 + (tip.y - .5) * sensitivity)));
+        const smoothing = .3;
+        if (!state.pointerPosition) state.pointerPosition = { x: targetX, y: targetY };
+        else {
+          state.pointerPosition.x += (targetX - state.pointerPosition.x) * smoothing;
+          state.pointerPosition.y += (targetY - state.pointerPosition.y) * smoothing;
+        }
+        const { x, y } = state.pointerPosition;
+        const cursor = $("#virtualCursor");
+        cursor.style.left = `${x}px`;
+        cursor.style.top = `${y}px`;
+        cursor.classList.add("visible");
+        const target = findInteractiveTarget(x, y);
+        updateHandHover(target);
+        const palmWidth = Math.max(.001, distanceBetween(landmarks[5], landmarks[17]));
+        const pinchRatio = distanceBetween(landmarks[4], landmarks[8]) / palmWidth;
+        const pinching = state.pinchLatched ? pinchRatio < .55 : pinchRatio < .34;
+        cursor.classList.toggle("pinching", pinching);
+        if (pinching && !state.pinchLatched) {
+          state.pinchLatched = true;
+          const now = Date.now();
+          if (now - state.lastPinchAt >= 300) {
+            state.lastPinchAt = now;
+            if (target) activateHandTarget(target);
+            else {
+              soundFor("wrong");
+              setHandStatus("ตรวจพบมือ · เลื่อนเคอร์เซอร์ไปวางบนปุ่มก่อนบีบนิ้ว", "detected");
+            }
+          } else {
+            setHandStatus("พร้อมควบคุม · รอสักครู่ก่อนเลือกปุ่มถัดไป", "ready");
+          }
+        } else if (!pinching) {
+          state.pinchLatched = false;
+          const pointing = isIndexPointing(landmarks);
+          if (target) setHandStatus(`พร้อมควบคุม · ${target instanceof HTMLSelectElement ? "บีบนิ้วเพื่อเปลี่ยนตัวเลือก" : "บีบนิ้วโป้งแตะนิ้วชี้เพื่อกดปุ่ม"}`, "ready");
+          else setHandStatus(pointing ? "ตรวจพบมือ · ชี้นิ้วไปยังปุ่มที่ต้องการ" : "ตรวจพบมือ · ยกนิ้วชี้เพื่อเล็ง และบีบนิ้วเพื่อเลือก", "detected");
+        }
+      }
+
+      async function trackingLoop() {
+        if (!state.cameraActive || !state.hands) return;
+        try {
+          await state.hands.send({ image: $("#cameraVideo") });
+          if (state.cameraActive) state.cameraFrame = requestAnimationFrame(trackingLoop);
+        } catch (error) {
+          const message = error && error.message ? error.message : String(error);
+          $("#cameraStatus").textContent = `ตรวจจับมือไม่สำเร็จ: ${message} คุณข้ามขั้นตอนเพื่อเล่นต่อได้`;
+          stopCamera();
+          setHandStatus(`โหลด/ตรวจจับ MediaPipe ไม่สำเร็จ: ${message}`, "error");
+        }
+      }
+
+      function stopTrackingLoop() {
+        if (state.cameraFrame) cancelAnimationFrame(state.cameraFrame);
+        state.cameraFrame = 0;
+        state.cameraActive = false;
+        state.pinchLatched = false;
+        $("#virtualCursor").classList.remove("visible", "pinching");
+        clearHandHover();
+      }
+
+      function stopCamera() {
+        stopTrackingLoop();
+        state.handMode = null;
+        state.pointerPosition = null;
+        clearHandLandmarks();
+        if (state.stream) {
+          for (const track of state.stream.getTracks()) track.stop();
+          state.stream = null;
+        }
+        for (const video of [$("#cameraVideo"), $("#gameCameraVideo")]) {
+          video.pause();
+          video.srcObject = null;
+          video.classList.remove("visible");
+        }
+        $("#handHud").hidden = true;
+        $("#cameraPlaceholder").style.display = "grid";
+        $("#handControlButton").textContent = "☝️ เปิดควบคุมด้วยนิ้วชี้";
+        $("#handControlButton").setAttribute("aria-pressed", "false");
+        setHandStatus("กล้องปิดแล้ว", "idle");
+      }
+
+      async function startCameraChallenge() {
+        const button = $("#enableCamera");
+        const attemptToken = ++state.cameraAttemptToken;
+        button.disabled = true;
+        $("#cameraStatus").textContent = "กำลังขออนุญาตใช้กล้องและเตรียมระบบตรวจจับมือ...";
+        $("#handHud").hidden = false;
+        setHandStatus("กำลังโหลด AI · กำลังขออนุญาตใช้กล้อง", "loading");
+        try {
+          const started = await startHandTracking("challenge", attemptToken);
+          if (!started || attemptToken !== state.cameraAttemptToken) return;
+          $("#cameraStatus").textContent = `เปิดกล้องแล้ว · AI กำลังค้นหามือเพื่อทำท่า “${state.gesture.text}”`;
+          $("#handControlButton").textContent = "✋ ปิดควบคุมด้วยนิ้วชี้";
+          $("#handControlButton").setAttribute("aria-pressed", "true");
+        } catch (error) {
+          if (attemptToken !== state.cameraAttemptToken) return;
+          stopCamera();
+          const message = error && error.message ? error.message : String(error);
+          $("#handHud").hidden = false;
+          $("#cameraStatus").textContent = `เปิดกล้องหรือระบบตรวจจับไม่สำเร็จ: ${message} คุณยังข้ามไปเล่นได้`;
+          setHandStatus(`เปิดกล้อง/โหลด AI ไม่สำเร็จ: ${message}`, "error");
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      async function startHandTracking(mode, attemptToken) {
+        $("#handHud").hidden = false;
+        setHandStatus("กำลังโหลด AI · กำลังขออนุญาตใช้กล้อง", "loading");
+        await openCamera();
+        if (attemptToken !== state.cameraAttemptToken) {
+          stopCamera();
+          return false;
+        }
+        setHandStatus("เปิดกล้องแล้ว · กำลังโหลด AI MediaPipe Hands", "loading");
+        await loadHandsScript();
+        if (attemptToken !== state.cameraAttemptToken) {
+          stopCamera();
+          return false;
+        }
+        if (typeof window.Hands !== "function") throw new Error("MediaPipe Hands ไม่พร้อมใช้งาน");
+        if (!state.hands) {
+          state.hands = new window.Hands({
+            locateFile: file => `${mediaPipeCdn}/${file}`
+          });
+          state.hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 0,
+            minDetectionConfidence: .6,
+            minTrackingConfidence: .5
+          });
+          state.hands.onResults(onHandResults);
+        }
+        state.handMode = mode;
+        state.pointerPosition = null;
+        state.pinchLatched = false;
+        state.cameraActive = true;
+        $("#handControlButton").textContent = "✋ ปิดควบคุมด้วยนิ้วชี้";
+        $("#handControlButton").setAttribute("aria-pressed", "true");
+        setHandStatus("เปิดกล้องแล้ว · AI กำลังเริ่มตรวจจับมือ", "loading");
+        trackingLoop();
+        return true;
+      }
+
+      async function toggleHandController() {
+        if (state.cameraActive) {
+          state.cameraAttemptToken++;
+          stopCamera();
+          return;
+        }
+        const button = $("#handControlButton");
+        const attemptToken = ++state.cameraAttemptToken;
+        button.disabled = true;
+        try {
+          $("#handHud").hidden = false;
+          setHandStatus("กำลังโหลด AI · กำลังขออนุญาตใช้กล้อง", "loading");
+          await startHandTracking("controller", attemptToken);
+        } catch (error) {
+          if (attemptToken !== state.cameraAttemptToken) return;
+          stopCamera();
+          const message = error && error.message ? error.message : String(error);
+          $("#handHud").hidden = false;
+          setHandStatus(`เปิดกล้อง/โหลด AI ไม่สำเร็จ: ${message}`, "error");
+          if ($("#gameScreen").classList.contains("active")) {
+            setFeedback(`เปิดกล้องควบคุมด้วยมือไม่สำเร็จ: ${message} ใช้เมาส์หรือคีย์บอร์ดแทนได้`, "error");
+          }
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      function capturePhoto() {
+        if (!state.stream || !$("#cameraVideo").videoWidth) {
+          $("#photoStatus").textContent = "ยังไม่มีกล้องที่กำลังทำงาน กลับไปเริ่มใหม่และอนุญาตใช้กล้องก่อนเล่นเพื่อถ่ายภาพที่ระลึก";
+          return;
+        }
+        const canvas = $("#photoCanvas");
+        const context = canvas.getContext("2d");
+        const video = $("#cameraVideo");
+        const sourceWidth = video.videoWidth;
+        const sourceHeight = video.videoHeight;
+        const scale = Math.max(canvas.width / sourceWidth, (canvas.height - 105) / sourceHeight);
+        const drawWidth = sourceWidth * scale;
+        const drawHeight = sourceHeight * scale;
+        context.fillStyle = "#e9e3ff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.save();
+        context.translate(canvas.width, 0);
+        context.scale(-1, 1);
+        context.drawImage(video, (canvas.width - drawWidth) / 2, (canvas.height - 105 - drawHeight) / 2, drawWidth, drawHeight);
+        context.restore();
+        context.fillStyle = "rgba(255, 253, 248, .94)";
+        context.fillRect(0, canvas.height - 105, canvas.width, 105);
+        context.fillStyle = "#5b42c9";
+        context.font = "bold 32px Tahoma, sans-serif";
+        context.fillText("ROBOT CODE ADVENTURE", 30, canvas.height - 62);
+        context.fillStyle = "#29264b";
+        context.font = "bold 23px Tahoma, sans-serif";
+        context.fillText(`🤖 นักผจญภัย · ${state.score} คะแนน · ${state.stars} ดาว`, 30, canvas.height - 24);
+        context.font = "100px serif";
+        context.fillText("🤖", canvas.width - 145, canvas.height - 8);
+        canvas.style.display = "block";
+        $("#downloadPhoto").hidden = false;
+        $("#photoStatus").textContent = "ถ่ายภาพเรียบร้อย! กด “ดาวน์โหลดภาพ” เพื่อบันทึก";
+      }
+
+      $("#goSetup").addEventListener("click", () => showScreen("setupScreen"));
+      $("#backHome").addEventListener("click", () => showScreen("homeScreen"));
+      $("#toBooth").addEventListener("click", goToBooth);
+      $("#difficultySelect").addEventListener("change", event => {
+        state.difficulty = event.target.value;
+        const defaultSeconds = levels[event.target.value].seconds;
+        $("#timeSlider").value = defaultSeconds;
+        $("#timeValue").textContent = defaultSeconds;
+      });
+      $("#practiceToggle").addEventListener("change", event => {
+        $("#timeControl").hidden = event.target.checked;
+      });
+      $("#timeSlider").addEventListener("input", event => {
+        $("#timeValue").textContent = event.target.value;
+      });
+      $("#handSensitivity").addEventListener("input", event => {
+        state.cursorSensitivity = Number(event.target.value);
+      });
+      $("#enableCamera").addEventListener("click", startCameraChallenge);
+      $("#handControlButton").addEventListener("click", toggleHandController);
+      $("#skipGesture").addEventListener("click", startGame);
+      $("#noCamera").addEventListener("click", () => { stopCamera(); startGame(); });
+      document.querySelectorAll(".direction-button").forEach(button => button.addEventListener("click", () => addCommand(button.dataset.dir)));
+      $("#undoCommand").addEventListener("click", () => {
+        if (state.commands.length && !state.running && !state.resolving) {
+          state.commands.pop(); renderCommands(); soundFor("select");
+        }
+      });
+      $("#clearCommands").addEventListener("click", () => {
+        if (state.running || state.resolving) return;
+        state.commands = []; renderCommands(); soundFor("select");
+      });
+      $("#runCommands").addEventListener("click", runCommands);
+      document.addEventListener("keydown", event => {
+        if (!$("#gameScreen").classList.contains("active") || event.altKey || event.ctrlKey || event.metaKey) return;
+        const dir = Object.keys(directions).find(key => directions[key].key === event.key);
+        if (dir) { event.preventDefault(); addCommand(dir); }
+        if (event.key === "Enter" && !state.running && !state.resolving) runCommands();
+      });
+      $("#soundToggle").addEventListener("click", () => {
+        state.muted = !state.muted;
+        $("#soundToggle").textContent = state.muted ? "🔇 ปิดเสียง" : "🔊 เปิดเสียง";
+        $("#soundToggle").setAttribute("aria-pressed", String(!state.muted));
+        if (!state.muted) soundFor("select");
+      });
+      $("#capturePhoto").addEventListener("click", capturePhoto);
+      $("#downloadPhoto").addEventListener("click", () => {
+        const link = document.createElement("a");
+        link.download = "robot-code-adventure-photo.png";
+        link.href = $("#photoCanvas").toDataURL("image/png");
+        link.click();
+      });
+      $("#playAgain").addEventListener("click", () => showScreen("setupScreen"));
+      $("#summaryHome").addEventListener("click", () => { stopCamera(); showScreen("homeScreen"); });
+
+      window.addEventListener("pagehide", stopCamera);
+    })();
+  </script>
+</body>
+</html>
