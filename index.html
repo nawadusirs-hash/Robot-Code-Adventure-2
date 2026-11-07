@@ -44,6 +44,7 @@
 
     .app-shell { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 18px 0 30px; }
     .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .topbar-actions { display: flex; gap: 8px; align-items: center; }
     .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; letter-spacing: .03em; }
     .brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; background: var(--yellow); box-shadow: 0 5px 0 #eab744; font-size: 24px; }
     .brand small { display: block; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 0; }
@@ -164,7 +165,7 @@
       box-shadow: 0 10px 32px rgba(48, 39, 101, .2); pointer-events: none;
     }
     .hand-hud[hidden] { display: none; }
-    .hand-preview { position: relative; overflow: hidden; aspect-ratio: 4 / 3; border-radius: 11px; background: #25213c; }
+    .hand-preview { position: relative; overflow: hidden; aspect-ratio: 4 / 3; border-radius: 11px; background: #25213c; pointer-events: none; }
     .hand-preview video, .hand-preview canvas {
       position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit;
     }
@@ -189,6 +190,16 @@
     .hand-press { animation: handTap .26s ease !important; }
     @keyframes handTap { 50% { transform: scale(.92); filter: brightness(1.08); } }
     .hand-hover-option { outline: 3px solid #ffbd38 !important; outline-offset: 2px; }
+    .pinch-ripple {
+      position: fixed; z-index: 10002; display: none; width: 18px; height: 18px; border: 3px solid #ffd35a; border-radius: 50%;
+      pointer-events: none; transform: translate(-50%, -50%) scale(.3); opacity: 0;
+    }
+    .pinch-ripple.fire { display: block; animation: pinchRipple .48s ease-out; }
+    @keyframes pinchRipple { 15% { opacity: 1; } 100% { transform: translate(-50%, -50%) scale(3.2); opacity: 0; } }
+    .hand-debug { margin-top: 9px; border-top: 1px solid var(--line); padding-top: 7px; color: var(--muted); font: 10px/1.45 Consolas, monospace; overflow-wrap: anywhere; }
+    .hand-debug[hidden] { display: none; }
+    .hand-debug-toggle { display: inline-block; margin-top: 5px; color: var(--purple-dark); font-size: 11px; font-weight: 900; cursor: pointer; pointer-events: auto; }
+    .touch-free, .touch-free * { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
     .control-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
     .control-actions button { flex: 1; min-width: 90px; font-size: 15px; }
     .control-actions .run-button { background: #ff8eaf; box-shadow: 0 5px 0 #dc6387; }
@@ -198,6 +209,7 @@
     .feedback.success { background: #e7fbf2; color: #27765d; }
     .solution-strip { display: none; margin-top: 9px; padding: 10px; border-radius: 12px; background: #fff4cf; font-weight: 900; line-height: 1.7; }
     .solution-strip.visible { display: block; }
+    .solution-strip .secondary-button { margin: 7px 0 0 8px; padding: 7px 10px; font-size: 13px; }
 
     .summary-panel { margin: 24px auto; padding: clamp(22px, 5vw, 40px); text-align: center; }
     .summary-trophy { font-size: 78px; }
@@ -228,6 +240,7 @@
       .brand { font-size: 13px; }
       .brand-mark { width: 37px; height: 37px; }
       .sound-toggle, .hand-toggle { padding: 8px 9px; font-size: 12px; }
+      .topbar-actions { gap: 6px; }
       .topbar { flex-wrap: wrap; }
       .hero { padding: 27px 19px; }
       .setup-grid { grid-template-columns: 1fr; }
@@ -242,7 +255,7 @@
   <div class="app-shell">
     <header class="topbar">
       <div class="brand"><span class="brand-mark" aria-hidden="true">🤖</span><span>ROBOT CODE ADVENTURE<small>เรียนรู้ด้วยการลงมือทำ</small></span></div>
-      <div style="display:flex;gap:8px;align-items:center">
+      <div class="topbar-actions">
         <button class="hand-toggle" id="handControlButton" type="button" aria-pressed="false">☝️ เปิดควบคุมด้วยนิ้วชี้</button>
         <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true">🔊 เปิดเสียง</button>
       </div>
@@ -414,8 +427,17 @@
       <span>ความไวเคอร์เซอร์</span>
       <input id="handSensitivity" type="range" min="0.5" max="1.5" step="0.1" value="1" aria-label="ปรับความไวเคอร์เซอร์">
     </label>
+    <button class="hand-debug-toggle" id="handDebugToggle" type="button" aria-expanded="false">เปิดแผงตรวจสอบการคลิก</button>
+    <div class="hand-debug" id="handDebug" hidden>
+      <div id="handDebugPoint">เคอร์เซอร์: —</div>
+      <div id="handDebugTarget">เป้าหมาย: —</div>
+      <div id="handDebugHit">Hit test/CSS: —</div>
+      <div id="handDebugPinch">จีบนิ้ว: —</div>
+      <div id="handDebugEvent">คลิกล่าสุด: —</div>
+    </div>
   </aside>
   <div class="virtual-cursor" id="virtualCursor" aria-hidden="true"></div>
+  <div class="pinch-ripple" id="pinchRipple" aria-hidden="true"></div>
 
   <script>
     (() => {
@@ -454,7 +476,7 @@
         muted: false, audio: null, gesture: null, hands: null, stream: null, cameraFrame: 0,
         cameraActive: false, handMode: null,
         pointerPosition: null, hoveredElement: null, pinchLatched: false, lastPinchAt: 0,
-        cursorSensitivity: 1,
+        clickFeedbackUntil: 0, lastHandScrollAt: 0, cursorSensitivity: 1,
         handsScriptPromise: null, roundToken: 0, cameraAttemptToken: 0, lastGestureAt: 0
       };
 
@@ -691,9 +713,24 @@
         const text = document.createElement("span");
         text.textContent = `เฉลยเส้นทาง: ${arrows || "เริ่มต้นตรงจุดหมาย!"}`;
         const hint = document.createElement("span");
-        hint.textContent = " · กำลังไปภารกิจถัดไปใน 5 วินาที";
-        $("#solutionStrip").replaceChildren(text, hint);
+        hint.textContent = " · กำลังไปภารกิจถัดไปใน 5 วินาที หรือชี้ปุ่มเพื่อไปต่อ";
+        const nextButton = document.createElement("button");
+        nextButton.type = "button";
+        nextButton.id = "nextMissionButton";
+        nextButton.className = "secondary-button";
+        nextButton.textContent = "ภารกิจถัดไป ▶";
+        nextButton.addEventListener("click", advanceMission);
+        $("#solutionStrip").replaceChildren(text, hint, nextButton);
         $("#solutionStrip").classList.add("visible");
+      }
+
+      function advanceMission() {
+        if (!state.resolving) return;
+        if (state.resolutionTimer) clearTimeout(state.resolutionTimer);
+        state.resolutionTimer = null;
+        state.round++;
+        if (state.round >= state.maps.length) showSummary();
+        else beginRound();
       }
 
       function finishRound(success, timedOut = false) {
@@ -725,9 +762,7 @@
         const token = state.roundToken;
         state.resolutionTimer = setTimeout(() => {
           if (token !== state.roundToken) return;
-          state.round++;
-          if (state.round >= state.maps.length) showSummary();
-          else beginRound();
+          advanceMission();
         }, 5000);
       }
 
@@ -980,6 +1015,10 @@
         const canvas = $("#handLandmarkCanvas");
         const context = canvas.getContext("2d");
         context.clearRect(0, 0, canvas.width, canvas.height);
+        $("#handDebugPoint").textContent = "เคอร์เซอร์: —";
+        $("#handDebugTarget").textContent = "กำลังชี้: ไม่พบปุ่ม";
+        $("#handDebugHit").textContent = "Hit test/CSS: —";
+        $("#handDebugPinch").textContent = "จีบนิ้ว: ไม่พบมือ";
       }
 
       function drawHandLandmarks(landmarks) {
@@ -1035,7 +1074,28 @@
         if (!(element instanceof Element)) return null;
         const target = element.closest("button, select, input, a[href], [role='button'], [data-hand-click]");
         if (!target || target.hidden || target.getAttribute("aria-hidden") === "true") return null;
+        if (target.closest("[hidden]") || target.getClientRects().length === 0) return null;
+        if (target instanceof HTMLInputElement && target.type === "range" && target.id !== "handSensitivity") return null;
         return target;
+      }
+
+      function describeHandTarget(target) {
+        if (!target) return "ไม่พบปุ่ม";
+        if (target.id) return `#${target.id}`;
+        if (target.dataset.dir) return `คำสั่ง ${directions[target.dataset.dir]?.arrow || target.dataset.dir}`;
+        return (target.getAttribute("aria-label") || target.textContent.trim().replace(/\s+/g, " ")).slice(0, 40) || target.tagName.toLowerCase();
+      }
+
+      function updateHandDebug(x, y, target, pinchRatio, phase) {
+        const point = state.pointerPosition ? `${Math.round(x)}, ${Math.round(y)} px` : "—";
+        $("#handDebugPoint").textContent = `เคอร์เซอร์: ${point}`;
+        const bounds = target?.getBoundingClientRect();
+        $("#handDebugTarget").textContent = `กำลังชี้: ${describeHandTarget(target)}${bounds ? ` · ${Math.round(bounds.left)}, ${Math.round(bounds.top)} · ${Math.round(bounds.width)}×${Math.round(bounds.height)}` : ""}`;
+        const top = document.elementFromPoint(x, y);
+        const topStyle = top ? getComputedStyle(top) : null;
+        const targetStyle = target ? getComputedStyle(target) : null;
+        $("#handDebugHit").textContent = `Hit test/CSS: ${top ? `${top.tagName.toLowerCase()}${top.id ? `#${top.id}` : ""}` : "นอกหน้าจอ"} · ${targetStyle ? `pointer-events:${targetStyle.pointerEvents}, z:${targetStyle.zIndex}, transform:${targetStyle.transform === "none" ? "none" : "yes"}` : topStyle ? `pointer-events:${topStyle.pointerEvents}` : "—"}`;
+        $("#handDebugPinch").textContent = `จีบนิ้ว: ${phase} · ระยะ ${pinchRatio.toFixed(2)}×ฝ่ามือ`;
       }
 
       function updateHandHover(target) {
@@ -1048,17 +1108,43 @@
 
       function activateHandTarget(target) {
         if (!target || target.disabled) {
-          setHandStatus("พร้อมควบคุม · ปุ่มนี้ยังใช้งานไม่ได้", "ready");
+          $("#handDebugEvent").textContent = `คลิกล่าสุด: ปุ่มใช้ไม่ได้ (${describeHandTarget(target)})`;
+          setHandStatus(`ตรวจพบมือ · ปุ่ม ${describeHandTarget(target)} ยังใช้งานไม่ได้`, "detected");
           soundFor("wrong");
           return;
         }
+        if (!target.isConnected) {
+          $("#handDebugEvent").textContent = "คลิกล่าสุด: ยกเลิก · ปุ่มถูกเปลี่ยนระหว่างตรวจจับ";
+          setHandStatus("ตรวจพบมือ · ปุ่มถูกปรับปรุง กรุณาเล็งใหม่", "detected");
+          return;
+        }
+        const actualTarget = findInteractiveTarget(state.pointerPosition.x, state.pointerPosition.y);
+        if (actualTarget !== target) {
+          $("#handDebugEvent").textContent = `คลิกล่าสุด: ยกเลิก · ตำแหน่งเปลี่ยนเป็น ${describeHandTarget(actualTarget)}`;
+          setHandStatus("ตรวจพบมือ · เล็งที่ปุ่มใหม่แล้วจีบนิ้วอีกครั้ง", "detected");
+          return;
+        }
+        const buttonName = describeHandTarget(target);
+        $("#handDebugEvent").textContent = `คลิกล่าสุด: ${buttonName} · ${Math.round(state.pointerPosition.x)}, ${Math.round(state.pointerPosition.y)}`;
         target.classList.remove("hand-press");
         void target.offsetWidth;
         target.classList.add("hand-press");
         setTimeout(() => target.classList.remove("hand-press"), 300);
+        const ripple = $("#pinchRipple");
+        ripple.style.left = `${state.pointerPosition.x}px`;
+        ripple.style.top = `${state.pointerPosition.y}px`;
+        ripple.classList.remove("fire");
+        void ripple.offsetWidth;
+        ripple.classList.add("fire");
+        setTimeout(() => ripple.classList.remove("fire"), 500);
         soundFor("select");
         if (target instanceof HTMLSelectElement) {
-          target.selectedIndex = (target.selectedIndex + 1) % target.options.length;
+          const bounds = target.getBoundingClientRect();
+          const optionIndex = Math.max(0, Math.min(
+            target.options.length - 1,
+            Math.floor((state.pointerPosition.x - bounds.left) / Math.max(1, bounds.width) * target.options.length)
+          ));
+          target.selectedIndex = optionIndex;
           target.dispatchEvent(new Event("input", { bubbles: true }));
           target.dispatchEvent(new Event("change", { bubbles: true }));
         } else if (target instanceof HTMLInputElement && target.type === "range") {
@@ -1074,10 +1160,8 @@
         } else {
           target.click();
         }
-        const label = target.getAttribute("aria-label") || target.textContent.trim().replace(/\s+/g, " ");
-        setHandStatus(target instanceof HTMLSelectElement
-          ? `พร้อมควบคุม · เลือก ${target.options[target.selectedIndex].text}`
-          : `พร้อมควบคุม · เลือก ${label.slice(0, 42) || "ปุ่ม"}`, "ready");
+        state.clickFeedbackUntil = Date.now() + 850;
+        setHandStatus(`คลิกสำเร็จ · ${buttonName}`, "clicked");
       }
 
       function handleHandController(landmarks) {
@@ -1093,9 +1177,9 @@
         drawHandLandmarks(landmarks);
         const tip = landmarks[8];
         const sensitivity = state.cursorSensitivity;
-        const targetX = Math.max(0, Math.min(window.innerWidth, window.innerWidth * (.5 + (.5 - tip.x) * sensitivity)));
-        const targetY = Math.max(0, Math.min(window.innerHeight, window.innerHeight * (.5 + (tip.y - .5) * sensitivity)));
-        const smoothing = .3;
+        const targetX = Math.max(0, Math.min(window.innerWidth - 1, window.innerWidth * (.5 + (.5 - tip.x) * sensitivity)));
+        const targetY = Math.max(0, Math.min(window.innerHeight - 1, window.innerHeight * (.5 + (tip.y - .5) * sensitivity)));
+        const smoothing = .48;
         if (!state.pointerPosition) state.pointerPosition = { x: targetX, y: targetY };
         else {
           state.pointerPosition.x += (targetX - state.pointerPosition.x) * smoothing;
@@ -1106,20 +1190,34 @@
         cursor.style.left = `${x}px`;
         cursor.style.top = `${y}px`;
         cursor.classList.add("visible");
-        const target = findInteractiveTarget(x, y);
-        updateHandHover(target);
+        const now = Date.now();
         const palmWidth = Math.max(.001, distanceBetween(landmarks[5], landmarks[17]));
         const pinchRatio = distanceBetween(landmarks[4], landmarks[8]) / palmWidth;
-        const pinching = state.pinchLatched ? pinchRatio < .55 : pinchRatio < .34;
+        const pinching = state.pinchLatched ? pinchRatio < .62 : pinchRatio < .44;
+        if (!pinching && now - state.lastHandScrollAt > 90) {
+          if (y >= window.innerHeight - 24 && window.scrollY + window.innerHeight < document.documentElement.scrollHeight) {
+            window.scrollBy(0, 10);
+            state.lastHandScrollAt = now;
+          } else if (y <= 24 && window.scrollY > 0) {
+            window.scrollBy(0, -10);
+            state.lastHandScrollAt = now;
+          }
+        }
+        const target = findInteractiveTarget(x, y);
+        updateHandHover(target);
+        updateHandDebug(x, y, target, pinchRatio, pinching ? "จีบนิ้วแล้ว" : "นิ้วแยก");
         cursor.classList.toggle("pinching", pinching);
         if (pinching && !state.pinchLatched) {
           state.pinchLatched = true;
-          const now = Date.now();
-          if (now - state.lastPinchAt >= 300) {
+          if (now - state.lastPinchAt >= 450) {
             state.lastPinchAt = now;
-            if (target) activateHandTarget(target);
+            if (target) {
+              setHandStatus(`จีบนิ้วแล้ว · ${describeHandTarget(target)}`, "pinching");
+              activateHandTarget(target);
+            }
             else {
               soundFor("wrong");
+              $("#handDebugEvent").textContent = `คลิกล่าสุด: ไม่มีปุ่มที่ ${Math.round(x)}, ${Math.round(y)}`;
               setHandStatus("ตรวจพบมือ · เลื่อนเคอร์เซอร์ไปวางบนปุ่มก่อนบีบนิ้ว", "detected");
             }
           } else {
@@ -1128,7 +1226,8 @@
         } else if (!pinching) {
           state.pinchLatched = false;
           const pointing = isIndexPointing(landmarks);
-          if (target) setHandStatus(`พร้อมควบคุม · ${target instanceof HTMLSelectElement ? "บีบนิ้วเพื่อเปลี่ยนตัวเลือก" : "บีบนิ้วโป้งแตะนิ้วชี้เพื่อกดปุ่ม"}`, "ready");
+          if (Date.now() < state.clickFeedbackUntil) return;
+          if (target) setHandStatus(`กำลังชี้ · ${describeHandTarget(target)}`, "ready");
           else setHandStatus(pointing ? "ตรวจพบมือ · ชี้นิ้วไปยังปุ่มที่ต้องการ" : "ตรวจพบมือ · ยกนิ้วชี้เพื่อเล็ง และบีบนิ้วเพื่อเลือก", "detected");
         }
       }
@@ -1173,6 +1272,7 @@
         $("#cameraPlaceholder").style.display = "grid";
         $("#handControlButton").textContent = "☝️ เปิดควบคุมด้วยนิ้วชี้";
         $("#handControlButton").setAttribute("aria-pressed", "false");
+        document.body.classList.remove("touch-free");
         setHandStatus("กล้องปิดแล้ว", "idle");
       }
 
@@ -1203,6 +1303,7 @@
 
       async function startHandTracking(mode, attemptToken) {
         $("#handHud").hidden = false;
+        document.body.classList.add("touch-free");
         setHandStatus("กำลังโหลด AI · กำลังขออนุญาตใช้กล้อง", "loading");
         await openCamera();
         if (attemptToken !== state.cameraAttemptToken) {
@@ -1318,6 +1419,12 @@
       });
       $("#handSensitivity").addEventListener("input", event => {
         state.cursorSensitivity = Number(event.target.value);
+      });
+      $("#handDebugToggle").addEventListener("click", event => {
+        const expanded = event.currentTarget.getAttribute("aria-expanded") !== "true";
+        event.currentTarget.setAttribute("aria-expanded", String(expanded));
+        event.currentTarget.textContent = expanded ? "ซ่อนแผงตรวจสอบการคลิก" : "เปิดแผงตรวจสอบการคลิก";
+        $("#handDebug").hidden = !expanded;
       });
       $("#enableCamera").addEventListener("click", startCameraChallenge);
       $("#handControlButton").addEventListener("click", toggleHandController);
